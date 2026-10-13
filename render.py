@@ -53,7 +53,7 @@ def chunks(text, max_words=3, max_chars=22):
 
 def write_ass(path, text, total):
     parts = chunks(text)
-    weights = [max(len(p), 1) for p in parts]
+    weights = [max(peso(p), 1) for p in parts]
     tw = float(sum(weights))
     head = NL.join([
         '[Script Info]',
@@ -83,7 +83,7 @@ def write_ass(path, text, total):
         f.write(head + NL.join(lines) + NL)
 
 
-def main():
+def main_por_escena():
     job_path, out_path = sys.argv[1], sys.argv[2]
     with open(job_path, encoding='utf-8') as f:
         job = json.load(f)
@@ -133,6 +133,73 @@ def main():
     joined = '%s/joined.mp4' % work
     run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0',
          '-i', lst, '-c', 'copy', joined])
+    add_ambience(joined, out_path, job.get('fondo', 'suave'))
+    print('Duracion final: %.1f s' % duration(out_path))
+
+
+def peso(t):
+    # largo del texto + pausas naturales de la puntuacion (para repartir el tiempo)
+    return len(t) + 4 * sum(t.count(c) for c in ',;:') + 8 * sum(t.count(c) for c in '.!?')
+
+
+def main():
+    job_path, out_path = sys.argv[1], sys.argv[2]
+    with open(job_path, encoding='utf-8') as f:
+        job = json.load(f)
+    if not job.get('audio_b64'):
+        return main_por_escena()
+    work = 'work_render'
+    os.makedirs(work, exist_ok=True)
+    escenas = job['escenas']
+    raw = '%s/voz.mp3' % work
+    with open(raw, 'wb') as f:
+        f.write(base64.b64decode(job['audio_b64']))
+    voz = '%s/voz_f.mp3' % work
+    speed = float(job.get('velocidad', SPEED))
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw, '-filter:a',
+         'silenceremove=start_periods=1:start_duration=0:start_threshold=-45dB,'
+         'atempo=%.2f,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=44100' % speed,
+         '-c:a', 'libmp3lame', '-q:a', '2', voz])
+    voice = duration(voz)
+    total = voice + TAIL
+    pesos = [float(max(peso(s.get('texto', '')), 1)) for s in escenas]
+    tw = sum(pesos)
+    clip_files = []
+    for i, s in enumerate(escenas):
+        d = total * pesos[i] / tw
+        img = '%s/i%02d.jpg' % (work, i)
+        with open(img, 'wb') as f:
+            f.write(base64.b64decode(s['imagen_b64']))
+        habla = d - (TAIL if i == len(escenas) - 1 else 0.0)
+        ass = '%s/s%02d.ass' % (work, i)
+        write_ass(ass, s.get('texto', ''), max(habla, 0.5))
+        frames = max(int(d * FPS), 1)
+        if i % 2 == 0:
+            z = "1+0.14*on/%d" % frames
+        else:
+            z = "1.14-0.14*on/%d" % frames
+        vf = (
+            "crop='min(iw,ih*9/16)':ih,scale=2160:-2:flags=lanczos,"
+            "zoompan=z='%s':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=%d:s=%dx%d:fps=%d,"
+            "ass=%s,format=yuv420p"
+        ) % (z, frames, W, H, FPS, ass)
+        clip = '%s/c%02d.mp4' % (work, i)
+        run(['ffmpeg', '-y', '-loglevel', 'error', '-i', img, '-vf', vf, '-an',
+             '-t', '%.3f' % d, '-r', str(FPS),
+             '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', clip])
+        clip_files.append(clip)
+    lst = '%s/list.txt' % work
+    with open(lst, 'w') as f:
+        for c in clip_files:
+            f.write("file '%s'" % os.path.basename(c) + NL)
+    video = '%s/joined_v.mp4' % work
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0',
+         '-i', lst, '-c', 'copy', video])
+    joined = '%s/joined.mp4' % work
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', video, '-i', voz,
+         '-af', 'apad=pad_dur=%.2f,aresample=44100' % TAIL,
+         '-map', '0:v', '-map', '1:a', '-t', '%.3f' % total,
+         '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-ac', '2', joined])
     add_ambience(joined, out_path, job.get('fondo', 'suave'))
     print('Duracion final: %.1f s' % duration(out_path))
 
