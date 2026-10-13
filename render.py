@@ -101,7 +101,7 @@ def main():
         fast = '%s/a%02df.mp3' % (work, i)
         speed = float(job.get('velocidad', SPEED))
         run(['ffmpeg', '-y', '-loglevel', 'error', '-i', aud,
-             '-filter:a', 'atempo=%.2f' % speed, '-c:a', 'libmp3lame', '-q:a', '2', fast])
+             '-filter:a', 'atempo=%.2f,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=44100' % speed, '-c:a', 'libmp3lame', '-q:a', '2', fast])
         aud = fast
         voice = duration(aud)
         total = voice + TAIL
@@ -281,7 +281,7 @@ def add_ambience(src, dst, mood):
     if mood in ('ritmo', 'epico', 'suave'):
         wav = 'work_render/musica.wav'
         synth_music(wav, mood, total + 1.0)
-        level = {'ritmo': '0.55', 'epico': '0.60', 'suave': '0.50'}[mood]
+        level = {'ritmo': '0.30', 'epico': '0.34', 'suave': '0.28'}[mood]
         graph = (
             "[1:a]aformat=channel_layouts=stereo,volume=%s,afade=t=in:d=1.0,"
             "afade=t=out:st=%.2f:d=2.0[m];"
