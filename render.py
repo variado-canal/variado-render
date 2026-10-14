@@ -52,35 +52,10 @@ def chunks(text, max_words=3, max_chars=22):
 
 
 def write_ass(path, text, total):
-    parts = chunks(text)
-    weights = [max(peso(p), 1) for p in parts]
-    tw = float(sum(weights))
-    head = NL.join([
-        '[Script Info]',
-        'ScriptType: v4.00+',
-        'PlayResX: %d',
-        'PlayResY: %d',
-        '',
-        '[V4+ Styles]',
-        'Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,'
-        'Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,'
-        'Alignment,MarginL,MarginR,MarginV,Encoding',
-        'Style: Default,DejaVu Sans,84,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,'
-        '1,0,0,0,100,100,0,0,1,7,2,2,60,60,470,1',
-        '',
-        '[Events]',
-        'Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text',
-        '',
-    ]) % (W, H)
-    lines = []
-    t = 0.0
-    for p, wgt in zip(parts, weights):
-        d = total * wgt / tw
-        lines.append('Dialogue: 0,%s,%s,Default,,0,0,0,,%s' % (
-            ass_time(t), ass_time(t + d), p.replace(NL, ' ')))
-        t += d
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(head + NL.join(lines) + NL)
+    import subs_pro as S
+    lines = S.dialogos(text, 0.0, total, "Default", 3, 22)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(S.cabecera(W, H) + NL.join(lines) + NL)
 
 
 def main_por_escena():
