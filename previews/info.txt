@@ -1,0 +1,4 @@
+fuente={'ruta': '/home/runner/.fonts/BarlowCondensed-Bold.ttf', 'familia': 'Barlow Condensed', 'bold': 1, 'factor': 1.0}
+BarlowCondensed-Bold.ttf: "Barlow Condensed" "Bold"
+
+medidor ok=True em=65.7 cap=46.0 ass_size=88.6 ancho(TRABAJOS Y RELACIONES)=590
