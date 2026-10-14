@@ -51,11 +51,15 @@ def chunks(text, max_words=3, max_chars=22):
     return out
 
 
-def write_ass(path, text, total):
+def write_ass(path, text, total, linea='', clip=None):
+    """Subtitulos (estilo de referencia: mayusculas con recuadro rojo) + linea de titulo fija arriba (job.linea_titulo)."""
     import subs_pro as S
+    head = S.cabecera(W, H)
     lines = S.dialogos(text, 0.0, total, "Default", 3, 22)
+    if linea:
+        lines += S.titulo_fijo(linea, 0.0, clip if clip else total + TAIL)
     with open(path, "w", encoding="utf-8") as f:
-        f.write(S.cabecera(W, H) + NL.join(lines) + NL)
+        f.write(head + NL.join(lines) + NL)
 
 
 def main_por_escena():
@@ -82,7 +86,7 @@ def main_por_escena():
         total = voice + TAIL
         frames = max(int(total * FPS), 1)
         ass = '%s/s%02d.ass' % (work, i)
-        write_ass(ass, s.get('texto', ''), voice)
+        write_ass(ass, s.get('texto', ''), voice, job.get('linea_titulo', ''), total)
         if i % 2 == 0:
             z = "1+0.14*on/%d" % frames
         else:
@@ -147,7 +151,7 @@ def main():
             f.write(base64.b64decode(s['imagen_b64']))
         habla = d - (TAIL if i == len(escenas) - 1 else 0.0)
         ass = '%s/s%02d.ass' % (work, i)
-        write_ass(ass, s.get('texto', ''), max(habla, 0.5))
+        write_ass(ass, s.get('texto', ''), max(habla, 0.5), job.get('linea_titulo', ''), d)
         frames = max(int(d * FPS), 1)
         if i % 2 == 0:
             z = "1+0.14*on/%d" % frames
