@@ -43,37 +43,10 @@ def envolver(texto, ancho):
 
 
 def escribir_ass(path, texto, hablar, hook=None, hook_hasta=0.0, fuente=None, fuente_desde=0.0, fuente_hasta=0.0):
-    partes = R.chunks(texto)
-    pesos = [max(R.peso(p), 1) for p in partes]
-    tw = float(sum(pesos))
-    cabecera = NL.join([
-        '[Script Info]',
-        'ScriptType: v4.00+',
-        'PlayResX: %d' % W,
-        'PlayResY: %d' % H,
-        '',
-        '[V4+ Styles]',
-        'Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,'
-        'Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,'
-        'Alignment,MarginL,MarginR,MarginV,Encoding',
-        'Style: Default,DejaVu Sans,84,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,'
-        '1,0,0,0,100,100,0,0,1,7,2,2,60,60,470,1',
-        'Style: Hook,DejaVu Sans,88,&H0037C8FF,&H000000FF,&H00000000,&H96000000,'
-        '1,0,0,0,100,100,0,0,1,9,4,8,70,70,330,1',
-        'Style: Fuente,DejaVu Sans,40,&H00F0F0F0,&H000000FF,&H00000000,&H64000000,'
-        '1,0,0,0,100,100,0,0,1,4,1,2,80,80,330,1',
-        '',
-        '[Events]',
-        'Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text',
-        '',
-    ])
-    lineas = []
-    t = 0.0
-    for p, w in zip(partes, pesos):
-        d = hablar * w / tw
-        lineas.append('Dialogue: 0,%s,%s,Default,,0,0,0,,%s' % (
-            R.ass_time(t), R.ass_time(t + d), p.replace(NL, ' ')))
-        t += d
+    """Subtitulos con el estilo de referencia compartido (subs_pro.py): mayusculas, recuadro rojo en la palabra activa."""
+    import subs_pro as S
+    cabecera = S.cabecera(W, H)
+    lineas = S.dialogos(texto, 0.0, hablar, 'Default', 3, 22)
     if hook and hook_hasta > 0.3:
         txt = '\\N'.join(envolver(limpiar(hook).upper(), 15))
         lineas.append('Dialogue: 1,%s,%s,Hook,,0,0,0,,{\\fad(120,300)}%s' % (
@@ -84,6 +57,7 @@ def escribir_ass(path, texto, hablar, hook=None, hook_hasta=0.0, fuente=None, fu
             R.ass_time(fuente_desde), R.ass_time(fuente_hasta), txt))
     with open(path, 'w', encoding='utf-8') as f:
         f.write(cabecera + NL.join(lineas) + NL)
+
 
 
 def sonidos(path, secs, eventos):
