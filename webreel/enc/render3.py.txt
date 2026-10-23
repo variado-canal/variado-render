@@ -1,0 +1,35 @@
+import sys, json, time, subprocess, numpy as np, scipy.io.wavfile as wf
+from playwright.sync_api import sync_playwright
+import sfx2
+html, voice_json, voice_wav, out = sys.argv[1:5]; FPS = 30
+V = json.load(open(voice_json)); W = V['words']
+sr, vx = wf.read(voice_wav); vx = vx.astype(np.float32) / 32768
+if vx.ndim > 1: vx = vx.mean(1)
+vx = np.concatenate([np.zeros(int(.3 * sr), np.float32), vx])  # mismo LEAD que las palabras
+with sync_playwright() as p:
+    b = p.chromium.launch(args=['--no-sandbox'])
+    pg = b.new_page(viewport={'width': 720, 'height': 1280})
+    pg.add_init_script('window.VOICE=' + json.dumps(W, ensure_ascii=False))
+    pg.on('pageerror', lambda e: print('PAGEERR', e)); pg.goto('file://' + __import__('os').path.abspath(html)); pg.wait_for_timeout(600)
+    dur = pg.evaluate('DUR'); ev = pg.evaluate('EV'); n = int(dur * FPS)
+    assert sfx2.SR == sr, (sfx2.SR, sr)
+    sx = sfx2.synth(sorted(ev, key=lambda e: e['t']), dur).astype(np.float32)
+    N = int(dur * sr); v = np.zeros(N, np.float32); m = min(N, len(vx)); v[:m] = vx[:m]
+    # voz: compresion suave + nivel
+    act = np.abs(v) > .02; rv = np.sqrt(np.mean(v[act] ** 2)) if act.any() else .1
+    v = np.tanh(v / (rv * 2.5)) * (rv * 2.5)
+    rv = np.sqrt(np.mean(v[np.abs(v) > .02] ** 2))
+    # sfx: 16 dB por debajo de la voz y bajan 4 dB mientras habla
+    asx = np.abs(sx) > .01; rs = np.sqrt(np.mean(sx[asx] ** 2)) if asx.any() else .1
+    sx = sx * (rv * 10 ** (-16 / 20) / rs)
+    k = int(.05 * sr); env = np.convolve(np.abs(v), np.ones(k) / k, 'same'); duck = 1 - .37 * np.clip(env / (rv * .8), 0, 1)
+    if sx.ndim == 1: sx = np.stack([sx, sx], 1)
+    mix = np.stack([v, v], 1) + sx[:N] * duck[:, None]
+    mix = mix / max(1, np.abs(mix).max() / .95)
+    wf.write(out + '.wav', sr, (mix * 32767).astype(np.int16)); json.dump(ev, open(out + '.events.json', 'w'))
+    ff = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'image2pipe', '-framerate', str(FPS), '-i', '-', '-i', out + '.wav', '-t', str(dur),
+        '-af', 'loudnorm=I=-14:TP=-1.5:LRA=5', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '19', '-preset', 'medium', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', '-shortest', out], stdin=subprocess.PIPE)
+    t0 = time.time()
+    for i in range(n):
+        pg.evaluate('t=>seek(t)', i / FPS); ff.stdin.write(pg.screenshot(type='jpeg', quality=93))
+    ff.stdin.close(); ff.wait(); print('frames', n, '%.0fs' % (time.time() - t0)); b.close()
