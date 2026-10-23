@@ -67,5 +67,44 @@ if not ok:  # respaldo: reparto proporcional por letras
     for w in sw:
         a = t / tot * d; t += len(norm(w)) + 1; out.append([w, a + LEAD, t / tot * d + LEAD - .03])
 to_wav(OUT + '.mp3', OUT + '.wav', 44100)
+
+# ---- recorte de pausas (pedido de Ferlyn 23-oct: sin pausas innecesarias, voz mas viva)
+GAP_MIN = float(job.get('gap_min', 0.16))   # solo se recortan silencios mayores a esto
+KEEP_W = float(job.get('keep_word', 0.05))   # pausa que queda entre palabras sin puntuacion fuerte
+KEEP_S = float(job.get('keep_sent', 0.11))   # pausa que queda tras . ? ! : ;
+if job.get('compress_pauses', True) and ok:
+    sr_, x_ = wf.read(OUT + '.wav'); x_ = x_.astype(np.float32)
+    cuts = []  # (a, b) en segundos del audio original, parte que se elimina
+    for i in range(len(out) - 1):
+        e0 = out[i][2] - LEAD; s1 = out[i + 1][1] - LEAD; gap = s1 - e0
+        if gap > GAP_MIN:
+            keep = KEEP_S if re.search(r'[.?!:;]$', out[i][0]) else KEEP_W
+            keep = min(keep, gap)
+            a = e0 + keep / 2; b = s1 - keep / 2
+            if b - a > 0.02: cuts.append((a, b))
+    if cuts:
+        pieces = []; pos = 0.0; fade = int(sr_ * 0.008)
+        for a, b in cuts:
+            pieces.append(x_[int(pos * sr_):int(a * sr_)]); pos = b
+        pieces.append(x_[int(pos * sr_):])
+        y_ = pieces[0]
+        for p_ in pieces[1:]:
+            if len(y_) > fade and len(p_) > fade:
+                ramp_ = np.linspace(0, 1, fade, dtype=np.float32)
+                y_[-fade:] = y_[-fade:] * (1 - ramp_) + p_[:fade] * ramp_
+                y_ = np.concatenate([y_, p_[fade:]])
+            else:
+                y_ = np.concatenate([y_, p_])
+        def newt(t):
+            t0_ = t - LEAD; rem = 0.0
+            for a, b in cuts:
+                if t0_ >= b: rem += (b - a)
+                elif t0_ > a: rem += (t0_ - a)
+            return t - rem
+        out = [[w, round(newt(s_), 3), round(newt(e_), 3)] for w, s_, e_ in out]
+        removed = sum(b - a for a, b in cuts); d = d - removed
+        wf.write(OUT + '.wav', sr_, np.clip(y_, -32768, 32767).astype(np.int16))
+        print('pausas recortadas: %d, %.1f s menos' % (len(cuts), removed))
 json.dump({'words': out, 'dur': d + LEAD, 'rate_pct': pct, 'sylps_voiced': round(sv, 2), 'sylps_total': round(st, 2), 'aligned': ok}, open(OUT + '.json', 'w'), ensure_ascii=False)
 print('voz', out[:3], '...', 'dur %.1f' % (d + LEAD), 'sil/s voz %.2f total %.2f' % (sv, st))
+
