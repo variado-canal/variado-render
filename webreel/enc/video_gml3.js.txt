@@ -1,0 +1,159 @@
+window.SPEC={foot:['Fuente: Vuelo 143 de Air Canada (1983) ·','informe oficial de seguridad aérea de Canadá'],tail:1.3,
+script:[
+¨¿Sabías que un avión se quedó sin combustible a doce mil metros de altura?¨,
+¨Con sesenta y nueve personas dentro, y sin motores, tuvo que aterrizar.¨,
+¨Todo empezó en tierra, el veintitrés de julio de mil novecientos ochenta y tres.¨,
+¨Los mecánicos midieron el combustible con una varilla, porque el medidor estaba averiado.¨,
+¨Pero Canadá acababa de cambiar de libras a kilos, y se confundieron al convertir.¨,
+¨Cargaron menos de la mitad del combustible necesario.¨,
+¨Aun así, el avión despegó de Montreal rumbo a Edmonton.¨,
+¨A mitad del viaje, sonó una alarma en la cabina.¨,
+¨Se apagó el primer motor, y poco después, el segundo.¨,
+¨Sin motores, el avión quedó casi en silencio, y aquel gigante de metal pasó a ser un planeador.¨,
+¨Por suerte, el capitán Robert Pearson también volaba planeadores.¨,
+¨Winnipeg quedaba demasiado lejos, así que el copiloto propuso una antigua base militar llamada Gimli.¨,
+¨Lo que nadie sabía, es que esa pista ahora era un circuito de carreras.¨,
+¨Ese día había autos corriendo, y niños en bicicleta cerca de la pista.¨,
+¨El avión bajó planeando, y el capitán lo inclinó de lado para perder altura.¨,
+¨Las ruedas de la nariz no se bloquearon, y la nariz rozó la pista, lanzando chispas.¨,
+¨El gigante frenó a tiempo, y los sesenta y nueve sobrevivieron.¨,
+¨Desde ese día lo llaman el planeador de Gimli, y ese avión siguió volando veinticinco años más.¨,
+¨Dale like, comenta si habrías subido a ese vuelo y comparte la historia con alguien que viaje en avión.¨],
+build(){
+const TONES={dawn:['#16336f','#7aa9e6','#ffd2a6'],day:['#2f78d4','#8fc4f2','#e9f5ff'],dusk:['#2a1d5c','#b24a6a','#ffb066'],night:['#050b24','#14265e','#2b3f7a']};
+function wsky(t,tone,o={}){const c=TONES[tone];sky(c[0],c[1],c[2]);if(tone=='night')stars(t);if(tone=='dawn'||tone=='dusk')sun(o.sx??600,o.sy??930,46,tone=='dusk'?'#ffb27a':'#ffe0b0');
+clouds(t,o.sp??120,380,1100,9,3,tone=='dusk'?'#ffd2b0':'#ffffff',.5,1.5);clouds(t,o.sp2??260,560,1300,8,19,tone=='dusk'?'#ffc09a':'#f4f9ff',.85,1.1);if(o.lines)speedlines(t,14,-200,1500,'rgba(255,255,255,.28)',o.lines)}
+const C={a:'#58e0ff',b:'#ffb347',r:'#ff4d5a',g:'#58e08a'};
+const sp=t=>t*38;
+function glider(x,y,s,rot=0){g.save();g.translate(x,y);g.rotate(rot);g.scale(s,s);g.fillStyle='#f4f7fc';g.beginPath();g.ellipse(0,0,84,8,0,0,6.2832);g.fill();g.fillStyle='#e5ecf6';g.beginPath();g.moveTo(-8,-3);g.quadraticCurveTo(-4,-34,2,-3);g.fill();g.fillStyle='#cfd9ea';g.beginPath();g.moveTo(-26,-4);g.lineTo(-30,-52);g.lineTo(-22,-52);g.lineTo(-8,-4);g.closePath();g.fill();
+g.fillStyle='#e8eef9';g.beginPath();g.moveTo(-150,2);g.quadraticCurveTo(0,-20,150,2);g.quadraticCurveTo(0,-8,-150,2);g.fill();g.strokeStyle='#cbd6ea';g.lineWidth=3;g.stroke();g.fillStyle='rgba(120,190,255,.7)';g.beginPath();g.ellipse(46,-6,22,8,0,Math.PI,0);g.fill();g.fillStyle='#d7263d';g.fillRect(-82,-1,50,5);g.restore()}
+function thumb(x,y,s,col){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle=col;g.beginPath();g.roundRect(-34,-4,18,44,5);g.fill();g.beginPath();g.moveTo(-10,0);g.lineTo(6,-30);g.quadraticCurveTo(24,-34,20,-12);g.lineTo(18,-4);g.lineTo(40,-4);g.quadraticCurveTo(52,0,48,12);g.quadraticCurveTo(52,24,44,30);g.quadraticCurveTo(46,40,36,42);g.lineTo(-10,42);g.closePath();g.fill();g.restore()}
+function bubble(x,y,s,col){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle=col;g.beginPath();g.roundRect(-46,-34,92,60,20);g.fill();g.beginPath();g.moveTo(-18,24);g.lineTo(-30,48);g.lineTo(2,26);g.closePath();g.fill();g.fillStyle='#fff';for(let i=-1;i<=1;i++){g.beginPath();g.arc(i*20,-4,6,0,6.2832);g.fill()}g.restore()}
+function shareIc(x,y,s,col){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle=col;g.beginPath();g.moveTo(-40,0);g.lineTo(44,-34);g.lineTo(22,38);g.lineTo(6,10);g.closePath();g.fill();g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.moveTo(-40,0);g.lineTo(6,10);g.lineTo(44,-34);g.closePath();g.fill();g.restore()}
+function weight(x,y,s,label,col){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(0,6,90,14,0,0,6.2832);g.fill();g.fillStyle=lg(0,-120,0,0,[[0,mix(col,'#ffffff',.35)],[1,mix(col,'#000000',.2)]]);g.beginPath();g.moveTo(-58,0);g.lineTo(-40,-96);g.lineTo(40,-96);g.lineTo(58,0);g.closePath();g.fill();g.beginPath();g.arc(0,-112,26,Math.PI,0);g.lineTo(18,-96);g.lineTo(-18,-96);g.closePath();g.fill();g.fillStyle='rgba(255,255,255,.3)';g.beginPath();g.moveTo(-50,-4);g.lineTo(-36,-90);g.lineTo(-24,-90);g.lineTo(-34,-4);g.closePath();g.fill();g.fillStyle='#fff';g.font='900 36px '+FONT;g.textAlign='center';g.textBaseline='middle';g.fillText(label,0,-44);g.restore()}
+const K=(w,d)=>cue(w,d||0);
+const t_comb=K('combustible'),t_doce=K('doce'),t_sin=K('sin#1');
+const tl={comb:K('combustible'),doce:K('doce'),sesenta:K('sesenta'),aterr:K('aterrizar')};
+ev(0,'amb',{kind:'jet',len:t_comb});ev(t_comb,'spool',{});ev(t_doce,'sparkle',{k:0});for(let i=0;i<9;i++)ev(t_doce+.08+i*.06,'count',{k:i/9});
+ev(WORDS[LST[1]][1]-.05,'amb',{kind:'murmur',len:2.6});ev(K('sesenta'),'pop',{p:1.2});ev(K('sin#1'),'amb',{kind:'wind',len:2.2});
+ev(K('veintitrés'),'flip',{});ev(K('julio'),'pop',{p:1});ev(K('mil'),'pop',{p:.9});
+ev(K('varilla'),'plip',{k:2});for(let i=0;i<5;i++)ev(K('varilla')+.25+i*.14,'tick',{k:i});ev(K('averiado'),'buzz',{});ev(K('averiado')+.05,'thump',{});
+ev(K('libras'),'thump',{});ev(K('kilos'),'thump',{});ev(K('convertir'),'stamp',{});
+ev(K('Cargaron'),'fill',{len:1.6});ev(K('mitad'),'stamp',{});
+ev(K('despegó')-.9,'amb',{kind:'jet',len:2.6});ev(K('despegó'),'whoosh',{dir:1,len:.5,amp:.5});ev(K('Montreal'),'pop',{p:1});ev(K('Edmonton'),'pop',{p:1.2});
+ev(K('alarma'),'alarm',{});ev(K('alarma')+1.2,'alarm',{});
+ev(K('primer'),'spool',{});ev(K('primer')+.1,'thump',{});ev(K('segundo'),'spool',{});ev(K('segundo')+.1,'thump',{});shake(K('primer')+.1,.4,8);shake(K('segundo')+.1,.4,10);
+ev(K('Sin#2')-.05,'amb',{kind:'wind',len:3.2});ev(K('planeador#0'),'pop',{p:1.1});
+ev(K('Pearson'),'pop',{p:1});ev(K('planeadores#0'),'pop',{p:1.3});
+ev(K('Winnipeg'),'pop',{p:1});ev(K('lejos'),'buzz',{});ev(K('Gimli#0'),'ding',{});
+ev(K('carreras'),'rev',{});ev(K('autos'),'rev',{});ev(K('bicicleta'),'pop',{p:1.4});
+ev(K('planeando')-.1,'amb',{kind:'wind',len:3.6});ev(K('inclinó'),'whoosh',{dir:-1,len:.5,amp:.5});
+const tTouch=K('rozó')-.1;ev(tTouch,'squeal',{});ev(tTouch+.05,'thump',{});ev(tTouch+.3,'scrape',{});shake(tTouch+.05,.7,16);
+ev(K('frenó'),'cheer',{});ev(K('sesenta#1'),'ding',{});ev(K('sobrevivieron'),'sparkle',{k:2});
+ev(K('planeador#1'),'pop',{p:1.2});for(let i=0;i<10;i++)ev(K('veinticinco')+i*.05,'count',{k:i/10});
+ev(K('like'),'pop',{p:1.2});ev(K('comenta'),'pop',{p:1.5});ev(K('comparte'),'pop',{p:1.8});ev(K('alguien'),'ding',{});
+const shots=[];
+shots.push({at:null,draw:(t,lt)=>{wsky(t,'day',{lines:900,sx:560,sy:1000});const e=1-ramp(t,tl.comb,tl.comb+.7,E.io);
+plane(360,640+Math.sin(t*1.6)*8,Math.sin(t*1.1)*.015+ramp(t,tl.comb,tl.comb+2.4)*.06,.95,{eng:[e,e],spin:sp(t),strobe:t});
+big('12 500 m',360,330,100,C.a,t_doce,t,{rot:-.04});
+if(t>tl.comb){g.save();g.translate(560,170);const p=ramp(t,tl.comb,tl.comb+.25,E.outB);g.scale(p,p);g.fillStyle=Math.sin(t*14)>0?'#ff3b3b':'#7a1f1f';g.beginPath();g.roundRect(-70,-34,140,68,14);g.fill();g.fillStyle='#fff';g.font='900 26px '+FONT;g.textAlign='center';g.textBaseline='middle';g.fillText('SIN',0,-9);g.fillText('COMBUSTIBLE',0,16);g.restore()}},
+cam:[{s:2.1,x:560,y:630},{at:'se',s:.82,x:360,y:600,len:1.0},{at:'combustible',dt:-.05,s:2.3,x:380,y:700,cut:true},{at:'doce',dt:-.05,s:.9,x:360,y:560,cut:true}]});
+shots.push({line:1,draw:(t,lt)=>{cabin(t,{look:ramp(t,WORDS[LST[1]][1],WORDS[LST[1]][1]+1)*.6,dim:.0});
+const a=ramp(t,tl.sesenta,tl.sesenta+.5,E.outB);if(a>0){big('69',360,250,200,C.a,tl.sesenta,t);pill('PERSONAS A BORDO',360,400,C.a,tl.sesenta+.15,t,36)}},
+cam:[{s:1.0,x:360,y:560},{at:'sesenta',dt:-.1,s:1.45,x:360,y:420,len:.7}]});
+shots.push({at:'sin#1',draw:(t,lt)=>{wsky(t,'day',{lines:700,sx:600,sy:1050});const a=lt;plane(380+Math.sin(t)*10,600+a*30,.1+Math.sin(t*1.3)*.01,.95,{eng:[0,0],spin:sp(t)});
+const k=ramp(t,tl.aterr-.3,tl.aterr+.3,E.outB);if(k>0)vstamp('ATERRIZAR',360,300,C.r,tl.aterr-.1,t,64,-.08)},
+cam:[{s:1.5,x:300,y:640},{at:'aterrizar',dt:-.2,s:.85,x:360,y:700,len:.5}]});
+shots.push({line:2,trans:'zoom',draw:(t,lt)=>{wsky(t,'dawn',{sx:520,sy:900,sp:30,sp2:60});runway(t,900);
+plane(250,792,0,.95,{eng:[1,1],spin:0,gear:1,nose:1});
+g.save();g.translate(630,860);g.fillStyle='#e4a23a';g.beginPath();g.roundRect(0,-70,150,70,10);g.fill();g.fillStyle='#8b5a12';g.fillRect(100,-96,60,46);g.fillStyle='#222a40';for(const wx of[26,124]){g.beginPath();g.arc(wx,6,18,0,6.2832);g.fill()}g.fillStyle='#fff';g.font='900 22px '+FONT;g.textAlign='center';g.fillText('COMBUSTIBLE',60,-30);g.restore();
+g.strokeStyle='#2a2f44';g.lineWidth=9;g.beginPath();g.moveTo(630,820);g.bezierCurveTo(520,900,420,760,330,850);g.stroke();
+const k=ramp(t,K('veintitrés'),K('veintitrés')+.4,E.outB);if(k>0)calendar(360,300,1.15*k,'23','JULIO','1983',k);},
+cam:[{s:1.0,x:360,y:660},{at:'veintitrés',dt:-.1,s:1.25,x:360,y:420,len:.6},{at:'mil#1',s:1.5,x:330,y:760,len:.8}]});
+shots.push({line:3,trans:'zoom',draw:(t,lt)=>{g.fillStyle=lg(0,-300,0,1700,[[0,'#26344f'],[1,'#0d1424']]);g.fillRect(-500,-300,1700,2000);
+tank(300,1080,360,640,.5,t,'#e8b040','',{ticks:true});
+const d=ramp(t,K('varilla')-.1,K('varilla')+.9,E.io);g.fillStyle='#d6dbe6';g.fillRect(332,320+d*400-420,22,560);g.fillStyle='#10162a';for(let i=0;i<14;i++){g.fillRect(332,300+d*400-420+i*38+100,i%2?12:22,3)}
+if(t<K('medidor')-.1)pill('VARILLA',470,520,C.b,K('varilla'),t,34);pill('LITROS → KILOS',300,1180,C.a,K('midieron')+.2,t,30);
+const gx=560,gy=330;const a=ramp(t,K('medidor'),K('medidor')+.3,E.outB);if(a>0){g.save();g.translate(gx,gy);g.scale(a,a);g.fillStyle='#0a0e1b';g.beginPath();g.arc(0,0,94,0,6.2832);g.fill();g.strokeStyle='#4b5778';g.lineWidth=7;g.stroke();g.strokeStyle='#ff4a4a';g.lineWidth=7;g.lineCap='round';g.beginPath();g.moveTo(0,0);g.lineTo(-52,40);g.stroke();g.restore();xmark(gx,gy,34,K('averiado'),t);txt('AVERIADO',gx,gy+130,34,C.r,a,900)}},
+cam:[{s:1.05,x:340,y:700},{at:'varilla',dt:-.1,s:1.35,x:340,y:520,len:.5},{at:'medidor',dt:-.05,s:2.0,x:540,y:330,cut:true},{at:'averiado',s:2.3,x:560,y:340,len:1.2}]});
+shots.push({line:4,draw:(t,lt)=>{g.fillStyle=lg(0,-300,0,1700,[[0,'#1d3b45'],[1,'#0a1a20']]);g.fillRect(-500,-300,1700,2000);
+const a0=ramp(t,WORDS[LST[4]][1],WORDS[LST[4]][1]+.4,E.outB),a1=ramp(t,K('libras'),K('libras')+.35,E.outB),a2=ramp(t,K('kilos'),K('kilos')+.35,E.outB);
+const sw=ramp(t,K('kilos')-.1,K('kilos')+.5,E.io);
+g.save();g.globalAlpha=(1-.75*sw)*a0;weight(240,640+(1-a0)*120,(1.2+.15*Math.sin(t*6)*(1-sw)*a1)*a0,'lb','#8c96ab');g.restore();
+weight(480,650+(1-a0)*120,(1.3+.4*sw)*a0,'kg','#58a6c9');
+pill('CANADÁ CAMBIÓ',360,300,C.a,WORDS[LST[4]][1]+.1,t,34);if(a1>0)pill('LIBRAS',240,780,C.b,K('libras'),t,40);if(a2>0)pill('KILOS',480,830,C.a,K('kilos'),t,44);
+if(t>K('libras')&&t<K('kilos')){g.strokeStyle=C.b;g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(300,450);g.lineTo(420,450);g.lineTo(396,426);g.moveTo(420,450);g.lineTo(396,474);g.stroke()}
+const c=K('convertir');big('× 1,77',360,300,120,C.r,K('confundieron'),t,{rot:-.05});vstamp('ERROR',360,980,C.r,c+.1,t,80,-.1)},
+cam:[{s:1.2,x:300,y:640},{at:'kilos',dt:-.1,s:1.5,x:460,y:640,cut:true},{at:'confundieron',dt:-.1,s:1.1,x:360,y:520,cut:true},{at:'convertir',dt:-.15,s:1.3,x:360,y:900,len:.5}]});
+shots.push({line:5,draw:(t,lt)=>{g.fillStyle=lg(0,-300,0,1700,[[0,'#26344f'],[1,'#0d1424']]);g.fillRect(-500,-300,1700,2000);
+tank(190,1000,250,640,1,t,'#e8b040','NECESARIO',{ticks:true});const f=.46*ramp(t,K('Cargaron'),K('Cargaron')+1.5,E.io);tank(530,1000,250,640,f,t,'#e8b040','CARGADO',{ticks:true});
+pill('22 300 kg',190,330,C.a,K('Cargaron')+.1,t,34);pill('10 100 kg',530,330,C.r,K('Cargaron')+.9,t,34);vstamp('MENOS DE LA MITAD',360,640,C.r,K('mitad'),t,56,-.1)},
+cam:[{s:1.0,x:360,y:700},{at:'Cargaron',dt:.5,s:1.9,x:530,y:760,len:1.0},{at:'mitad',dt:-.1,s:1.15,x:360,y:640,cut:true}]});
+shots.push({line:6,trans:'zoom',draw:(t,lt)=>{const to=K('despegó');wsky(t,'dawn',{sx:200,sy:960,sp:60,sp2:140,lines:t>to?1200:0});runway(t,900);
+const u=ramp(t,WORDS[LST[6]][1],to+.2,E.inC),x=lerp(-60,520,u)+ramp(t,to,to+3)*500,fl=ramp(t,to,to+1.2,E.io),y=788-fl*(150+(t-to)*60*(t>to?1:0));
+plane(x,y,-fl*.2,.9,{eng:[1,1],spin:sp(t),gear:1-ramp(t,to+.8,to+1.2),nose:1-ramp(t,to+.8,to+1.2),strobe:t});
+pill('MONTREAL',150,500,C.a,K('Montreal'),t,34);pill('EDMONTON',600,360,C.b,K('Edmonton'),t,34)},
+cam:[{s:1.1,x:240,y:760},{at:'despegó',dt:-.3,s:1.0,x:420,y:700,len:1.2},{at:'Edmonton',dt:-.2,s:.85,x:520,y:520,len:.8}]});
+shots.push({line:7,draw:(t,lt)=>{cockpit(t,{alarm:K('alarma'),fuel:t>K('alarma')?.12:.3,hor:0,bank:Math.sin(t)*.01})},
+cam:[{s:1.2,x:360,y:900},{at:'alarma',dt:-.05,s:2.4,x:360,y:680,cut:true},{at:'cabina',dt:-.1,s:1.15,x:360,y:880,cut:true}]});
+shots.push({line:8,trans:'zoom',draw:(t,lt)=>{wsky(t,'day',{lines:500,sx:600,sy:1050});const a=ramp(t,K('primer'),K('primer')+.7,E.io),b=ramp(t,K('segundo'),K('segundo')+.7,E.io);
+plane(360,620+Math.sin(t*1.5)*6,.03+ramp(t,K('segundo'),K('segundo')+2)*.05,1.0,{eng:[1-a,1-b],spin:sp(t)});
+if(t>K('primer')){pill('MOTOR 1',250,430,C.r,K('primer'),t,32)}if(t>K('segundo')){pill('MOTOR 2',470,430,C.r,K('segundo'),t,32)}},
+cam:[{s:1.0,x:360,y:620},{at:'primer',dt:-.1,s:2.4,x:380,y:700,cut:true},{at:'poco',s:1.0,x:360,y:620,cut:true},{at:'segundo',dt:-.1,s:2.2,x:410,y:690,cut:true},{at:'segundo',dt:1.0,s:.85,x:360,y:620,len:.6}]});
+shots.push({line:9,draw:(t,lt)=>{const gl=K('planeador#0');
+if(t<K('gigante')-.05){cabin(t,{look:1,dim:.35,mouth:.8})}else{wsky(t,'dusk',{lines:500,sx:200,sy:1000,sp:50,sp2:110});plane(300+Math.sin(t)*10,640+Math.sin(t*1.2)*8,.1,.9,{eng:[0,0],spin:sp(t)});
+const k=ramp(t,gl,gl+.4,E.outB);if(k>0){glider(lerp(900,520,ramp(t,gl-.2,gl+1.2)),380,.7,-.05);pill('PLANEADOR',540,470,C.b,gl,t,36)}}},
+cam:[{s:1.1,x:360,y:600},{at:'silencio',dt:-.1,s:1.5,x:300,y:640,len:1.2},{at:'gigante',dt:-.15,s:.95,x:360,y:640,cut:true},{at:'planeador#0',dt:-.1,s:1.3,x:430,y:560,len:.8}]});
+shots.push({line:10,trans:'zoom',draw:(t,lt)=>{wsky(t,'day',{sp:90,sp2:200,sx:620,sy:1100});glider(lerp(-100,780,lt/4),300,.8,-.04);glider(lerp(900,100,lt/6),520,.5,.04);
+const k=ramp(t,WORDS[LST[10]][1],WORDS[LST[10]][1]+.5,E.outB);pilot(360,760-(1-k)*80,2.0*k);pill('CAPITÁN ROBERT PEARSON',360,260,C.a,K('Pearson'),t,34);pill('TAMBIÉN PILOTO DE PLANEADORES',360,1010,C.b,K('planeadores#0'),t,28)},
+cam:[{s:.95,x:360,y:700},{at:'Pearson',dt:-.2,s:1.35,x:360,y:640,len:1.2},{at:'planeadores#0',dt:-.1,s:1.6,x:360,y:760,cut:true}]});
+shots.push({line:11,draw:(t,lt)=>{mapGrid();const gx=520,gy=420,wx=280,wy=820;
+g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=5;g.setLineDash([16,14]);g.lineDashOffset=-t*30;g.beginPath();g.moveTo(80,1000);g.lineTo(wx-40,wy+40);g.stroke();
+const u=ramp(t,K('antigua')-.2,K('Gimli#0')+.6,E.io);g.strokeStyle=rgba(C.g,.9);g.beginPath();g.moveTo(80,1000);g.quadraticCurveTo(160,520,gx,gy);g.stroke();g.setLineDash([]);
+const pu=ramp(t,K('Winnipeg')-.2,K('Gimli#0')+.9,E.io);const px=lerp(80,gx,pu),py=lerp(1000,gy,pu)-Math.sin(pu*Math.PI)*120;g.save();g.translate(px,py);g.rotate(-.9);g.fillStyle='#fff';g.beginPath();g.moveTo(34,0);g.lineTo(-24,-20);g.lineTo(-10,0);g.lineTo(-24,20);g.closePath();g.fill();g.restore();
+marker(wx,wy,'WINNIPEG',C.r,K('Winnipeg'),t);xmark(wx,wy-4,26,K('lejos'),t);pill('DEMASIADO LEJOS',wx,wy+90,C.r,K('lejos'),t,26);
+marker(gx,gy,'GIMLI',C.g,K('Gimli#0')-.1,t,{fs:36});check(gx+70,gy-8,24,K('Gimli#0')+.15,t);pill('ANTIGUA BASE MILITAR',gx,gy+90,C.g,K('antigua'),t,24)},
+cam:[{s:1.0,x:360,y:800},{at:'Winnipeg',dt:-.1,s:1.7,x:290,y:820,cut:true},{at:'copiloto',s:1.0,x:360,y:700,cut:true},{at:'Gimli#0',dt:-.1,s:1.8,x:500,y:450,cut:true}]});
+shots.push({line:12,trans:'zoom',draw:(t,lt)=>{wsky(t,'day',{sp:20,sp2:40,sx:100,sy:900});runway(t,900);
+const cs=['#e63946','#ffb703','#3a86ff','#06d6a0'];const tc=K('carreras');
+for(let i=0;i<4;i++){const x=(((i*340-(t-tc+3)*(520+i*70))%1500)+1500)%1500-420;car(x,930+(i%2)*24,1.15,cs[i])}
+g.fillStyle='#ffffff';for(let r=0;r<2;r++)for(let c=0;c<10;c++){g.fillStyle=(r+c)%2?'#111':'#fff';g.fillRect(40+c*24,520+r*24,24,24)}g.fillStyle='#6b7280';g.fillRect(36,520,6,300);
+const tk=K('bicicleta');for(let i=0;i<3;i++){const a=ramp(t,tk+i*.12,tk+i*.12+.3,E.outB);if(a>0)kid(520+i*70,1040-(1-a)*80,1.3*a,cs[i],t)}
+for(let i=0;i<7;i++)person(60+i*90,1090,.9,['#6a5acd','#2a9d8f','#e76f51','#264653'][i%4],{arms:Math.max(0,Math.sin(t*6+i))*.8});
+pill('CIRCUITO DE CARRERAS',360,430,C.b,K('circuito'),t,34)},
+cam:[{s:1.15,x:300,y:850},{at:'carreras',dt:-.2,s:1.5,x:380,y:910,len:1.0},{at:'autos',dt:-.1,s:1.0,x:360,y:900,cut:true},{at:'niños',dt:-.1,s:1.9,x:560,y:1000,cut:true}]});
+const T0L=WORDS[LST[14]][1],tI=K('inclinó'),tM=K('bloquearon')-.3,tN=K('rozó')-.1,tS=K('frenó')+.25,SC=.95,BY=113;
+function lpose(t){let cx,cy,th,fold=0;const fl=ramp(t,tM-1.1,tM,E.io);
+if(t<tM){const u=(t-T0L)/(tM-T0L);cx=lerp(-120,430,u);cy=lerp(150,925,Math.pow(u,1.35));th=.05-.11*fl+(t>tI?.12*Math.sin((t-tI)*4.2)*(1-ramp(t,tM-.8,tM)):0)}
+else{const d=t-tM;cx=430+230*(1-Math.exp(-d*.75));if(t>tS)cx=430+230*(1-Math.exp(-(tS-tM)*.75));cy=925;const n=ramp(t,tN,tN+.3,E.outB);fold=n;th=-.06*(1-n)+.33*n-.015*ramp(t,tS,tS+.8)*n}
+const xc=cx-(Math.cos(th)*-10-Math.sin(th)*BY)*SC,yc=cy-(Math.sin(th)*-10+Math.cos(th)*BY)*SC;
+const pt=(lx,ly)=>[xc+(Math.cos(th)*lx-Math.sin(th)*ly)*SC,yc+(Math.sin(th)*lx+Math.cos(th)*ly)*SC];
+return {xc,yc,th,fold,pt,cx,cy}}
+function landScene(t,showCrowd){wsky(t,'day',{sp:10,sp2:20,sx:120,sy:900});runway(t,900);
+for(let i=0;i<5;i++)car(1080+i*110,980+(i%2)*10,.9,['#e63946','#ffb703','#3a86ff','#06d6a0','#8338ec'][i]);
+for(let i=0;i<5;i++)kid(1330+i*55,1040,1.1,['#e63946','#ffb703','#3a86ff'][i%3],t);
+const P=lpose(t);
+if(t>tN-.05){const d=t-tN,np=P.pt(240,26);g.save();g.globalCompositeOperation='lighter';
+if(t<tS+.4){g.fillStyle='rgba(255,230,150,.9)';glow('#ffb347',30);g.beginPath();g.arc(np[0],np[1],14,0,6.2832);g.fill();noglow()}g.restore();
+sparks(tN,t,np[0],np[1],46,{life:1.3,sp:520,ang:-2.5,spr:1.5,gr:650,r:4.5});sparks(tN+.3,t,np[0],np[1],34,{life:1.3,sp:460,ang:-2.4,spr:1.5,gr:650,r:4});sparks(tN+.7,t,np[0],np[1],28,{life:1.2,sp:420,ang:-2.4,spr:1.4,gr:650,r:3.6})}
+if(t>tM-.02){g.fillStyle='rgba(215,215,215,'+(.5*(1-ramp(t,tM,tS+1.2)))+')';for(let i=0;i<10;i++){const d=t-tM;g.beginPath();g.arc(P.cx-30-i*40-d*60,905-d*i*4,20+i*5,0,6.2832);g.fill()}}
+plane(P.xc,P.yc,P.th,SC,{eng:[0,0],spin:0,gear:1,nose:t<tN?.45+.1*Math.sin(t*9):1,fold:P.fold});return P}
+shots.push({line:14,draw:(t,lt)=>{const P=landScene(t);
+if(t>tI&&t<tM)pill('DESLIZAMIENTO LATERAL',360,260,C.b,tI,t,28);
+if(t>K('ruedas')&&t<tN+.1)pill('RUEDA SIN BLOQUEAR',460,420,C.r,K('ruedas'),t,28);
+if(t>tM&&t<tM+.3){g.fillStyle='rgba(255,255,255,'+(.35*(1-(t-tM)/.3))+')';g.fillRect(-300,-300,1400,2000)}},
+cam:[{s:1.0,x:150,y:330},{at:'inclinó',dt:-.2,s:1.25,x:120,y:520,len:.8},{at:'ruedas',dt:-.1,s:1.5,x:300,y:700,len:.9},{at:'bloquearon',dt:-.25,s:2.1,x:420,y:860,cut:true},{at:'rozó',dt:-.35,s:2.0,x:760,y:850,cut:true},{at:'chispas',dt:-.1,s:1.35,x:700,y:800,len:.8}]});
+shots.push({line:16,draw:(t,lt)=>{const P=landScene(t);
+for(let i=0;i<7;i++){const a=ramp(t,K('frenó')+.4+i*.09,K('frenó')+.8+i*.09,E.outB);if(a>0)person(300+i*65,1080,1.2*a,['#6a5acd','#2a9d8f','#e76f51','#264653','#e9c46a','#f4a261','#5a7bd9'][i],{arms:1})}
+big('69 DE 69',360,320,120,C.g,K('sesenta#1'),t,{rot:-.03});check(360,520,50,K('sobrevivieron'),t)},
+cam:[{s:1.2,x:700,y:830},{at:'sesenta#1',dt:-.2,s:.95,x:480,y:700,cut:true},{at:'sobrevivieron',dt:-.1,s:1.25,x:420,y:520,len:.9}]});
+shots.push({line:17,trans:'zoom',draw:(t,lt)=>{wsky(t,'dusk',{lines:600,sx:140,sy:960,sp:60,sp2:140});plane(360+Math.sin(t*.9)*14,640+Math.sin(t*1.3)*8,-.02,.95,{eng:[1,1],spin:sp(t),strobe:t});
+const k=ramp(t,K('planeador#1')-.1,K('planeador#1')+.4,E.outB);if(k>0){g.save();g.translate(360,300);g.scale(k,k);g.fillStyle='rgba(6,14,30,.85)';g.strokeStyle=C.b;g.lineWidth=5;g.beginPath();g.roundRect(-290,-60,580,120,30);g.fill();g.stroke();g.fillStyle='#fff';g.font='900 50px '+FONT;g.textAlign='center';g.textBaseline='middle';g.fillText('EL PLANEADOR',0,-14);g.fillStyle=C.b;g.fillText('DE GIMLI',0,34);g.restore()}
+const y=Math.round(lerp(1983,2008,ramp(t,K('veinticinco')-.2,K('veinticinco')+1.2,E.io)));big('1983 → '+(t>K('veinticinco')-.2?y:'1983'),360,960,84,C.a,K('siguió'),t)},
+cam:[{s:1.1,x:360,y:640},{at:'planeador#1',dt:-.1,s:1.3,x:360,y:420,len:.9},{at:'volando',dt:-.1,s:1.0,x:360,y:700,cut:true},{at:'veinticinco',dt:-.2,s:1.25,x:360,y:900,len:.8}]});
+shots.push({line:18,trans:'zoom',draw:(t,lt)=>{wsky(t,'night',{lines:400});plane(lerp(-300,1000,ramp(t,WORDS[LST[18]][1],DUR-.2,E.lin)),520,-.04,.7,{eng:[1,1],spin:sp(t),strobe:t});
+const ic=(w,fn,x,col)=>{const a=ramp(t,K(w),K(w)+.35,E.outB);if(a>0){g.save();g.globalAlpha=cl(a);fn(x,720+Math.sin(t*3+x)*6,2*a,col);g.restore()}};
+ic('like',thumb,130,C.a);ic('comenta',bubble,360,C.b);ic('comparte',shareIc,590,C.g);
+const labs=[['LIKE','like',130,C.a],['COMENTA','comenta',360,C.b],['COMPARTE','comparte',590,C.g]];labs.forEach(l=>{pill(l[0],l[2],860,l[3],K(l[1]),t,30)})},
+cam:[{s:1.0,x:360,y:700},{at:'comenta',dt:-.2,s:1.12,x:360,y:720,len:1.2}]});
+return {shots}}};
