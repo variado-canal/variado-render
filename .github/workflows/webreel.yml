@@ -1,0 +1,48 @@
+name: WEB reel
+on:
+  push:
+    paths: ['webjobs/**/job.json']
+  workflow_dispatch:
+    inputs:
+      job:
+        description: ruta del job.json
+        required: false
+permissions:
+  contents: write
+jobs:
+  reel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Dependencias
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ffmpeg
+          pip install edge-tts numpy scipy playwright
+          python -m playwright install --with-deps chromium
+          mkdir -p ~/.fonts
+          curl -sL -o ~/.fonts/Outfit.ttf https://github.com/google/fonts/raw/main/ofl/outfit/Outfit%5Bwght%5D.ttf
+          fc-cache -f
+      - name: Voz y render
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_JOB: ${{ github.event.inputs.job }}
+        run: |
+          python webreel/decode.py
+          JOB=$INPUT_JOB
+          if [ -z $JOB ]; then JOB=$(git diff --name-only HEAD~1 HEAD | grep '^webjobs/.*/job.json' | head -1); fi
+          eval $(python webreel/jobvars.py $JOB)
+          cd webreel
+          python build_scene.py ../$JOB scene.html
+          python tts.py ../$JOB /tmp/voz
+          python render3.py $HTML /tmp/voz.json /tmp/voz.wav /tmp/$ID.mp4
+          INFO=$(python jobvars.py info)
+          cp /tmp/voz.json /tmp/$INFO.json
+          gh release create v-$ID /tmp/$ID.mp4 /tmp/$INFO.json --title $ID --notes webreel || gh release upload v-$ID /tmp/$ID.mp4 /tmp/$INFO.json --clobber
+
