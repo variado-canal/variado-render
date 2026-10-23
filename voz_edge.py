@@ -12,8 +12,8 @@ R = importlib.import_module('render')
 D = importlib.import_module(os.environ.get('RENDER_SCRIPT', 'render'))
 
 VOZ = 'es-MX-JorgeNeural'
-RATE = '+8%'
-PITCH = '+2Hz'
+RATE = '+20%'
+PITCH = '+0Hz'
 GAP = 0.08
 CORTE = 54  # frames entre cortes de imagen (1.8 s a 30 fps)
 LIMPIA = ('silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:'
