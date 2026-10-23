@@ -1,0 +1,71 @@
+import asyncio, json, re, sys, unicodedata, subprocess
+import numpy as np, scipy.io.wavfile as wf
+from scipy.signal import butter, sosfiltfilt, find_peaks
+import edge_tts
+job = json.load(open(sys.argv[1])); OUT = sys.argv[2]
+VOICE = job.get('voice', 'es-MX-JorgeNeural'); TARGET = float(job.get('target_sylps', 5.5)); LEAD = float(job.get('lead', 0.3))
+TEXT = job['text']
+PITCH = job.get('pitch', '+0Hz'); FIXED = job.get('rate_pct')
+
+def norm(w):
+    w = unicodedata.normalize('NFD', w.lower())
+    return re.sub(r'[^a-z0-9]', '', ''.join(c for c in w if not unicodedata.combining(c)))
+
+async def synth(rate, path):
+    try:
+        c = edge_tts.Communicate(TEXT, VOICE, rate=rate, pitch=PITCH, boundary='WordBoundary')
+    except TypeError:
+        c = edge_tts.Communicate(TEXT, VOICE, rate=rate, pitch=PITCH)
+    words = []
+    with open(path, 'wb') as f:
+        async for ch in c.stream():
+            if ch['type'] == 'audio': f.write(ch['data'])
+            elif ch['type'] == 'WordBoundary':
+                words.append((ch['text'], ch['offset'] / 1e7, (ch['offset'] + ch['duration']) / 1e7))
+    return words
+
+def to_wav(src, dst, sr):
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', src, '-ac', '1', '-ar', str(sr), dst], check=True)
+
+def sylrate(wav):  # mismo medidor que se uso en las referencias
+    sr, x = wf.read(wav); x = x.astype(float) / 32768; d = len(x) / sr
+    y = sosfiltfilt(butter(4, [250, 3200], 'band', fs=sr, output='sos'), x)
+    h = int(sr * .01); e = np.sqrt(np.convolve(y ** 2, np.ones(h * 2) / (h * 2), 'same'))[::h]
+    es = np.convolve(e, np.ones(8) / 8, 'same'); thr = np.percentile(es, 95) * .18
+    pk, _ = find_peaks(es, height=thr * 1.6, distance=11, prominence=thr * .5)
+    vt = (es > thr).sum() * .01
+    return len(pk) / vt, len(pk) / d, d
+
+def run(pct):
+    rate = '%+d%%' % pct
+    words = asyncio.run(synth(rate, OUT + '.mp3')); to_wav(OUT + '.mp3', OUT + '_16k.wav', 16000)
+    return words, sylrate(OUT + '_16k.wav')
+
+if FIXED is not None:  # velocidad fija elegida por Ferlyn a oido
+    pct = int(FIXED); words, (sv, st, d) = run(pct); log = [('%+d%%' % pct, round(sv, 2), round(st, 2))]
+else:
+    pct = 0
+    words, (sv, st, d) = run(pct); log = [('+0%', round(sv, 2), round(st, 2))]
+    f = TARGET / sv; pct = int(max(-20, min(25, round((f - 1) * 100))))
+    if abs(pct) >= 2:
+        words, (sv, st, d) = run(pct); log.append(('%+d%%' % pct, round(sv, 2), round(st, 2)))
+print('calibracion', log)
+
+# alinear con las palabras del guion (con puntuacion)
+sw = TEXT.split(); out = []; k = 0; ok = True
+for w in sw:
+    n = norm(w); acc = ''; s0 = None
+    while k < len(words) and norm(acc) != n:
+        if s0 is None: s0 = words[k][1]
+        acc += words[k][0]; e0 = words[k][2]; k += 1
+        if len(norm(acc)) > len(n): break
+    if norm(acc) == n and s0 is not None: out.append([w, s0 + LEAD, e0 + LEAD])
+    else: ok = False; break
+if not ok:  # respaldo: reparto proporcional por letras
+    print('ALINEACION de respaldo')
+    tot = sum(len(norm(w)) + 1 for w in sw); t = 0; out = []
+    for w in sw:
+        a = t / tot * d; t += len(norm(w)) + 1; out.append([w, a + LEAD, t / tot * d + LEAD - .03])
+to_wav(OUT + '.mp3', OUT + '.wav', 44100)
+json.dump({'words': out, 'dur': d + LEAD, 'rate_pct': pct, 'sylps_voiced': round(sv, 2), 'sylps_total': round(st, 2), 'aligned': ok}, open(OUT + '.json', 'w'), ensure_ascii=False)
+print('voz', out[:3], '...', 'dur %.1f' % (d + LEAD), 'sil/s voz %.2f total %.2f' % (sv, st))
