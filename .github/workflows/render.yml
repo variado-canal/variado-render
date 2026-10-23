@@ -27,7 +27,12 @@ jobs:
       - name: Renderizar video
         run: |
           if [[ "${JOB_ID}" == d* ]]; then SCRIPT=render_dinero.py; else SCRIPT=render.py; fi
-          python3 "$SCRIPT" "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
+          if grep -q voz_edge "jobs/${JOB_ID}/job.json"; then
+            python3 -m pip install --break-system-packages -q edge-tts || python3 -m pip install -q edge-tts
+            RENDER_SCRIPT="${SCRIPT%.py}" python3 voz_edge.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
+          else
+            python3 "$SCRIPT" "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
+          fi
       - name: Publicar video en Release
         run: gh release create "v-${JOB_ID}" "video-${JOB_ID}.mp4" --title "video-${JOB_ID}" --notes "VARIADO"
       - name: Limpiar paquete del repositorio
@@ -40,3 +45,4 @@ jobs:
             if git pull --rebase -q origin main && git push -q; then break; fi
             sleep $((RANDOM % 8 + 3))
           done
+
