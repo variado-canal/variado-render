@@ -1,0 +1,17 @@
+DR.map=(s,t,lt)=>{const ap=ramp(t,s.t0,s.t0+.5,E.outB);g.save();g.translate(360,610);g.scale(.92+.08*ap,.92+.08*ap);g.translate(-360,-610);g.globalAlpha*=cl(ap*1.5);
+ const gr=g.createLinearGradient(0,330,0,890);gr.addColorStop(0,'#ff9aa8');gr.addColorStop(1,'#d9566e');g.fillStyle=gr;g.fill(tongueP);g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=4;g.beginPath();g.moveTo(360,350);g.lineTo(360,880);g.stroke();
+ const old=s.mode=='old'?ramp(lt,.1,.8):s.mode=='all'?1-ramp(lt,0,.6):0;
+ const zt=i=>s.zAt?cue(s.zAt[i])-s.t0:.3+i*.18;if(old>0)for(let i=0;i<4;i++){zoneFill(i,.62*old*ramp(lt,zt(i)-.1,zt(i)+.3))}
+ if(s.mode=='all'){const u=ramp(lt,.2,.9);g.save();g.clip(tongueP);g.fillStyle=rgba(CA,.28*u);g.fillRect(230,330,260,570);for(let i=0;i<110;i++){const x=252+rnd(i)*216,y=350+rnd(i+4)*520,pu=.5+.5*Math.sin(t*4+i);g.fillStyle='rgba(255,255,255,'+(u*(.25+.5*pu))+')';g.beginPath();g.arc(x,y,3+rnd(i+2)*3,0,6.2832);g.fill()}g.restore()}
+ g.strokeStyle=rgba(CA,.9);g.lineWidth=5;glow(CA,16);g.stroke(tongueP);noglow();
+ if(s.scan&&lt<1.7){const y=lerp(330,890,ramp(lt,.25,1.5,E.io));g.save();g.clip(tongueP);glow('#fff',24);g.fillStyle='rgba(255,255,255,.85)';g.fillRect(230,y,260,4);g.restore();noglow()}
+ g.restore();
+ if(s.mode=='old')ZN.forEach((z,i)=>pill(z[1],i==0?360:i==3?360:i==1?150:570,i==0?300:i==1?470:i==2?640:930,z[0],s.zAt?cue(s.zAt[i]):s.t0+.3+i*.18,t,22));
+ if(s.mode=='all')pill('TODA LA LENGUA',360,300,CA,cue(s.allAt),t,28);chips(s,t)};
+DR.flight=(s,t,lt)=>{const lv=s.empty?0:s.full?1:1-ramp(t,cue(s.gFrom),cue(s.gTo),E.io),u=ramp(t,s.t0,s.t1,E.io);
+ g.strokeStyle=rgba(CA,.12);g.lineWidth=1.5;for(let i=0;i<14;i++){const y=700+Math.pow(i/13,2)*500;g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
+ g.fillStyle='rgba(255,255,255,.55)';g.fillRect(40,830,640,8);for(let i=0;i<9;i++)g.fillRect(60+i*72,830,36,8);
+ const gl=ramp(t,s.t0+.2,s.t0+.6);g.save();g.globalAlpha=gl;g.fillStyle='rgba(6,14,30,.65)';g.beginPath();g.roundRect(46,400,64,300,32);g.fill();g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=4;g.stroke();
+ g.save();g.beginPath();g.roundRect(50,404,56,292,28);g.clip();g.fillStyle=lv>.35?GREEN:CB;g.fillRect(50,404+292*(1-lv),56,292*lv);g.restore();g.restore();pill(s.gLabel||'COMBUSTIBLE',140,360,lv>.35?GREEN:CB,s.t0+.3,t,20);
+ const x=lerp(190,s.land?520:620,u),y=s.land?lerp(520,780,E.inQ?0:u*u):520+Math.sin(u*3)*24;plane(x,s.land?lerp(500,790,u*u):y,s.land?lerp(-.05,.16,u):-.05+Math.sin(t*2)*.03,.8);chips(s,t)};
+
