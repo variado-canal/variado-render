@@ -4,7 +4,7 @@ import sys
 
 from motion6 import *
 from motion6 import frame, phrases_de, PLANTILLAS, PALETA, build_sfx, SR, W, H, FPS
-import motion7; import motion8
+import motion7; import motion8; import motion9
 import fondos
 import estilo_morado
 estilo_morado.instalar()
