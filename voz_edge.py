@@ -12,8 +12,8 @@ R = importlib.import_module('render')
 D = importlib.import_module(os.environ.get('RENDER_SCRIPT', 'render'))
 
 VOZ = 'es-MX-JorgeNeural'
-RATE = '+20%'
-PITCH = '+0Hz'
+RATE = '+8%'
+PITCH = '+2Hz'
 GAP = 0.05
 CORTE = 54  # frames entre cortes de imagen (1.8 s a 30 fps)
 LIMPIA = ('silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:'
@@ -27,10 +27,10 @@ def parchear(modulo):
     with open(ruta, encoding='utf-8') as f:
         t = f.read()
     cambios = [
-        ('"1+0.14*on/%d" % frames', '"1.06+0.14*mod(on,%d)/%d+0*%%d" %% frames' % (CORTE, CORTE)),
-        ('"1.14-0.14*on/%d" % frames', '"1.2-0.14*mod(on,%d)/%d+0*%%d" %% frames' % (CORTE, CORTE)),
+        ('"1+0.14*on/%d" % frames', '"1.03+0.05*mod(on,%d)/%d+0*%%d" %% frames' % (CORTE, CORTE)),
+        ('"1.14-0.14*on/%d" % frames', '"1.08-0.05*mod(on,%d)/%d+0*%%d" %% frames' % (CORTE, CORTE)),
         ("x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2'",
-         "x='iw/2-iw/zoom/2+(mod(floor(on/%d),2)*2-1)*iw*0.03':y='ih/2-ih/zoom/2+(mod(floor(on/%d)+1,2)*2-1)*ih*0.02'" % (CORTE, CORTE)),
+         "x='iw/2-iw/zoom/2+(mod(floor(on/%d),2)*2-1)*iw*0.012':y='ih/2-ih/zoom/2+(mod(floor(on/%d)+1,2)*2-1)*ih*0.008'" % (CORTE, CORTE)),
     ]
     n = 0
     for a, b in cambios:
