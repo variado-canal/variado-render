@@ -10,7 +10,7 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
       JOB_ID: ${{ inputs.job_id }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -22,12 +22,18 @@ jobs:
         run: |
           mkdir -p ~/.fonts
           curl -fsSL --retry 3 -o ~/.fonts/BarlowCondensed-Bold.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Bold.ttf" || echo "No se pudo bajar Barlow Condensed; se usara Inter Bold"
+          curl -sL -o ~/.fonts/Poppins-Bold.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Bold.ttf || true
+          curl -sL -o ~/.fonts/Poppins-Medium.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Medium.ttf || true
+          curl -sL -o ~/.fonts/Outfit.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/outfit/Outfit%5Bwght%5D.ttf" || true
           fc-cache -f || true
           fc-list | grep -i "barlow" || true
       - name: Renderizar video
         run: |
           if [[ "${JOB_ID}" == d* ]]; then SCRIPT=render_dinero.py; else SCRIPT=render.py; fi
-          if grep -q voz_edge "jobs/${JOB_ID}/job.json"; then
+          if grep -q '"motor"' "jobs/${JOB_ID}/job.json"; then
+            python3 -m pip install --break-system-packages -q numpy edge-tts || python3 -m pip install -q numpy edge-tts
+            python3 render_motion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
+          elif grep -q voz_edge "jobs/${JOB_ID}/job.json"; then
             python3 -m pip install --break-system-packages -q edge-tts || python3 -m pip install -q edge-tts
             RENDER_SCRIPT="${SCRIPT%.py}" python3 voz_edge.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
           else
