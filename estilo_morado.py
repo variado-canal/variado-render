@@ -62,7 +62,7 @@ def fondo_morado(kind):
 def _fondo(kind):
     if isinstance(kind, str) and kind.startswith('mor:'):
         if kind not in _4._FX:
-            _4._FX[kind] = fondo_morado(kind)
+            _4._FX[kind] = fondo_azul(kind) if ':azul:' in kind else fondo_morado(kind)
         return _4._FX[kind]
     return _ORIG_FONDO['f'](kind)
 
@@ -115,7 +115,7 @@ def _wrap_viejo(fn):
 
 def fijar(sc):
     kind = str(sc.get('fondo') or '')
-    modo = 'negro' if kind.startswith('mor:negro') else ('suave' if kind.startswith('mor:suave') else None)
+    modo = 'negro' if kind.startswith(('mor:negro', 'mor:azul')) else ('suave' if kind.startswith('mor:suave') else None); ESTILO['pal'] = 'azul' if kind.startswith('mor:azul') else 'mor'
     if modo != ESTILO['modo']:
         ESTILO['modo'] = modo; _3.PT = () if modo else _3.PT
         try:
@@ -247,7 +247,7 @@ def variar(job):
     opc = job.get('opciones') or {}
     txt = str(job.get('job_id', '')) + '|' + str(time.time_ns())
     rnd = random.Random(int(hashlib.md5(txt.encode('utf-8')).hexdigest()[:12], 16))
-    modo = opc.get('modo_morado') or rnd.choice(['suave', 'negro'])
+    modo = opc.get('modo_morado') or rnd.choice(['suave', 'negro', 'azul'])
     for sc in esc:
         f = sc.get('fondo')
         if f is None or not str(f).startswith(('mor:', 'gen:')):
