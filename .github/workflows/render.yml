@@ -16,6 +16,11 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: remotion/package-lock.json
       - name: Instalar ffmpeg y fuentes
         run: sudo apt-get update -y && sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-inter python3-pil python3-fonttools
       - name: Fuente de subtitulos (Barlow Condensed)
@@ -25,12 +30,23 @@ jobs:
           curl -sL -o ~/.fonts/Poppins-Bold.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Bold.ttf || true
           curl -sL -o ~/.fonts/Poppins-Medium.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Medium.ttf || true
           curl -sL -o ~/.fonts/Outfit.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/outfit/Outfit%5Bwght%5D.ttf" || true
+          curl -sL -o ~/.fonts/Poppins-ExtraBold.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-ExtraBold.ttf || true
+          curl -sL -o ~/.fonts/Poppins-SemiBold.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-SemiBold.ttf || true
+          curl -sL -o ~/.fonts/PatrickHand-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/patrickhand/PatrickHand-Regular.ttf || true
           fc-cache -f || true
           fc-list | grep -i "barlow" || true
       - name: Renderizar video
         run: |
           if [[ "${JOB_ID}" == d* ]]; then SCRIPT=render_dinero.py; else SCRIPT=render.py; fi
-          if grep -q '"motor"' "jobs/${JOB_ID}/job.json"; then
+          if grep -q '"remotion_tsx"' "jobs/${JOB_ID}/job.json"; then
+            python3 -m pip install --break-system-packages -q numpy edge-tts || python3 -m pip install -q numpy edge-tts
+            if python3 render_remotion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"; then
+              echo "Render Remotion OK"
+            else
+              echo "::warning::Remotion fallo; se usa el motor anterior (director)"
+              python3 render_motion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
+            fi
+          elif grep -q '"motor"' "jobs/${JOB_ID}/job.json"; then
             python3 -m pip install --break-system-packages -q numpy edge-tts || python3 -m pip install -q numpy edge-tts
             python3 render_motion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
           elif grep -q voz_edge "jobs/${JOB_ID}/job.json"; then
