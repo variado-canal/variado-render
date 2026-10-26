@@ -1,0 +1,110 @@
+{
+  "job_id": "v20261026-biblia-colores-comparacion-v4",
+  "titulo": "¿Y si los colores no existen? — versión Biblia Cinematográfica",
+  "motor": "director",
+  "voz_edge": "es-MX-JorgeNeural",
+  "rate": "+14%",
+  "pitch": "+2Hz",
+  "escenas": [
+    {
+      "texto": "¿Y si te dijera que los colores no existen como tú crees?",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ],
+        "remotion_tsx": "import React from 'react';\nimport {AbsoluteFill,interpolate,Easing,clamp,useS,en,FONT} from './kit';\nconst CY='#74e9ff', VI='#9d77ff', GL='#f9cd75';\nconst stops=[en('ojos'),en('cerebro'),en('color'),en('longitudes'),en('rojo'),en('azul'),en('realidad'),en('mente')];\nconst nodes=[\n {title:'LA LUZ',detail:'EL ORIGEN',col:GL,kind:0},\n {title:'TUS OJOS',detail:'RECIBEN FOTONES',col:CY,kind:1},\n {title:'CEREBRO',detail:'INTERPRETA SEÑALES',col:VI,kind:2},\n {title:'COLOR',detail:'UNA EXPERIENCIA',col:GL,kind:3},\n {title:'LONGITUDES',detail:'DE ONDA',col:CY,kind:4},\n {title:'ROJO',detail:'ONDA MÁS LARGA',col:'#ff6b80',kind:5},\n {title:'AZUL',detail:'ONDA MÁS CORTA',col:'#74b8ff',kind:6},\n {title:'REALIDAD',detail:'CREADA EN TU MENTE',col:GL,kind:7},\n {title:'VARIADO',detail:'LO INCREÍBLE ES REAL',col:CY,kind:8}\n];\nconst path=(x:number)=>880+Math.sin(x*.004)*110;\nconst ease=(s:number,a:number,b:number)=>interpolate(s,[a,b],[0,1],clamp);\nexport const SUBS={arriba:1670,size:46,acento:GL};\nexport const Escena:React.FC=()=>{\n const {s}=useS();\n const z=stops.reduce((v,t,i)=>s>=t?(i+1):v,0);\n const start=z===0?0:stops[z-1],end=stops[Math.min(z,stops.length-1)]||start+3;\n const p=ease(s,start,Math.max(start+.01,end));\n const camera=(Math.min(z,8)+p)*1080;\n const dust=Array.from({length:42},(_,i)=>({x:(i*337)%1080,y:(i*583)%1920,r:2+i%4}));\n return <AbsoluteFill style={{background:'radial-gradient(circle at 50% 45%,#17243b 0%,#090d1a 50%,#03050b 100%)',overflow:'hidden',fontFamily:FONT}}>\n <AbsoluteFill style={{background:'radial-gradient(circle at 50% 25%,rgba(103,144,216,.15),transparent 60%)'}}/>\n {dust.map((v,i)=><div key={i} style={{position:'absolute',left:v.x+Math.sin(s*.32+i)*22,top:v.y+Math.cos(s*.26+i)*18,width:v.r,height:v.r,background:i%3===0?GL:CY,opacity:.13+(i%5)*.055,borderRadius:'50%'}}/>)}\n <div style={{position:'absolute',top:70,left:64,letterSpacing:7,color:'#8daac6',fontWeight:800,fontSize:29}}>VARIADO / UNA PREGUNTA IMPOSIBLE</div>\n <AbsoluteFill style={{transform:'translateY('+(-camera)+'px)'}}>\n <svg viewBox=\"0 0 1080 12000\" width=\"1080\" height=\"12000\" style={{position:'absolute',top:0,left:0}}>\n <defs><linearGradient id=\"ray\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop stopColor=\"#f9cd75\"/><stop offset=\".5\" stopColor=\"#74e9ff\"/><stop offset=\"1\" stopColor=\"#9d77ff\"/></linearGradient><filter id=\"blur\"><feGaussianBlur stdDeviation=\"22\"/></filter></defs>\n <path d={'M 540 880 '+Array.from({length:8},(_,i)=>'C '+(250+i%2*580)+' '+(950+i*1080)+' '+(830-i%2*580)+' '+(1270+i*1080)+' 540 '+(1960+i*1080)).join(' ')} stroke=\"url(#ray)\" strokeWidth=\"54\" fill=\"none\" opacity=\".20\" filter=\"url(#blur)\"/>\n <path d={'M 540 880 '+Array.from({length:8},(_,i)=>'C '+(250+i%2*580)+' '+(950+i*1080)+' '+(830-i%2*580)+' '+(1270+i*1080)+' 540 '+(1960+i*1080)).join(' ')} stroke=\"url(#ray)\" strokeWidth=\"8\" fill=\"none\" strokeLinecap=\"round\"/>\n </svg>\n {nodes.map((n,i)=>{const y=860+i*1080;const near=Math.max(0,1-Math.abs((camera/1080)-i)*.72);const pulse=Math.sin(s*2+i)*.025;\n return <React.Fragment key={i}>\n <div style={{position:'absolute',top:y-280,left:140,width:800,height:800,borderRadius:'50%',border:'2px solid '+n.col,opacity:near*.26,boxShadow:'0 0 130px '+n.col+'30, inset 0 0 110px '+n.col+'18',transform:'perspective(1100px) rotateX(56deg) rotateY('+((i%2?1:-1)*16)+'deg) scale('+(1+pulse)+')'}}/>\n <div style={{position:'absolute',top:y-120,left:280,width:520,height:520,borderRadius:'50%',background:'radial-gradient(circle at 30% 25%, #ffffff 0%, '+n.col+' 16%, #152c48 69%, #060e21 100%)',boxShadow:'0 15px 100px '+n.col+'55, inset -18px -25px 50px rgba(0,0,0,.5)',opacity:Math.min(1,near+.28),transform:'scale('+(0.8+near*.2)+')'}}/>\n <div style={{position:'absolute',top:y+440,width:1080,textAlign:'center',color:'#f5f7ff',fontSize:88,fontWeight:900,letterSpacing:1,textShadow:'0 10px 50px #02020b'}}>{n.title}</div>\n <div style={{position:'absolute',top:y+555,width:1080,textAlign:'center',color:n.col,fontSize:31,fontWeight:700,letterSpacing:7}}>{n.detail}</div>\n {Array.from({length:6},(_,j)=><div key={j} style={{position:'absolute',top:y+70+Math.sin(s*(.6+j*.03)+j)*125,left:540+Math.cos(j*Math.PI/3+s*.14)*350,width:18,height:18,borderRadius:'50%',background:n.col,opacity:.5*near,boxShadow:'0 0 22px '+n.col}}/>)}\n </React.Fragment>})}\n </AbsoluteFill>\n <div style={{position:'absolute',top:260,left:70,right:70,textAlign:'center',fontSize:37,fontWeight:800,color:'#f7d991',letterSpacing:3,opacity:Math.max(0,1-ease(s,0.8,2))}}>¿Y SI LOS COLORES NO EXISTEN COMO CREES?</div>\n <div style={{position:'absolute',bottom:245,left:84,right:84,height:3,background:'#9dabc144'}}><div style={{height:3,width:(100*Math.min(1,s/(stops[7]+2)))+'%',background:GL}}/></div>\n </AbsoluteFill>\n};\n"
+      }
+    },
+    {
+      "texto": "Tus ojos captan la luz que rebota en los objetos.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Pero es tu cerebro el que interpreta esa información.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "El color que percibes no está guardado dentro de las cosas.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "En realidad, la luz tiene longitudes de onda diferentes.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "El rojo corresponde a ciertas ondas más largas dentro de la luz visible.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Y el azul a otras más cortas.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Tu cerebro convierte esas señales en la realidad llena de colores que conoces.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Así que la próxima vez que veas algo hermoso, recuerda: tu mente también pinta el mundo.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    }
+  ]
+}
