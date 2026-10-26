@@ -31,4 +31,4 @@ jobs:
       - name: Publish comparison MP4
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "biblia-$JOB_ID" "variado-$JOB_ID.mp4" --title "VARIADO Biblia - $JOB_ID" --notes "Comparativa cinematografica con el video becario: misma narracion, voz y FPS. Realizada con Remotion 2.5D; no es un master Blender 3D."
+        run: |\n          gh release create "biblia-$JOB_ID" "variado-$JOB_ID.mp4" --title "VARIADO Biblia - $JOB_ID" --notes "Comparativa cinematografica con el video becario; misma narracion, voz y FPS. Realizada con Remotion 2.5D."
