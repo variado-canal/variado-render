@@ -1,0 +1,46 @@
+{
+  "job_id": "v20261026-espacio-silencioso-3d",
+  "canal": "Variado",
+  "titulo": "La explosión que jamás escucharías en el espacio",
+  "concepto": "Cortometraje CGI 3D de curiosidad científica. Una línea luminosa enlaza espacios físicos y demuestra por qué el sonido no viaja por el vacío.",
+  "narracion": "En el espacio, una explosión sería completamente silenciosa. Aunque vieras una enorme bola de fuego, no escucharías nada. El sonido necesita un medio, como el aire, para viajar. Las partículas vibran y transmiten esa energía. Pero en el vacío casi no hay partículas que puedan hacerlo. Por eso, en la Luna, incluso la escena más espectacular puede ser absolutamente silenciosa. Variado.",
+  "voz_edge": "es-MX-JorgeNeural",
+  "rate": "+22%",
+  "duracion_segundos": 21.2,
+  "fps": 60,
+  "formatos": [
+    "1080x1920",
+    "1920x1080"
+  ],
+  "motor": "blender-real-3d",
+  "identidad": "variado; editorial ciencia con estética violeta, cian, oro",
+  "musica": "no music; ambient cinematic effects only if generated",
+  "estructura": [
+    {
+      "t": "0.0-3.2",
+      "accion": "explosión estilizada y silencio: impacto visual inmediato"
+    },
+    {
+      "t": "3.2-6.4",
+      "accion": "aire y moléculas vibrando"
+    },
+    {
+      "t": "6.4-9.7",
+      "accion": "ondas acústicas volumétricas"
+    },
+    {
+      "t": "9.7-12.9",
+      "accion": "ausencia de partículas en el vacío"
+    },
+    {
+      "t": "12.9-16.4",
+      "accion": "Luna tridimensional silenciosa"
+    },
+    {
+      "t": "16.4-21.2",
+      "accion": "conclusión y marca Variado"
+    }
+  ],
+  "titulo_publicacion": "¿Por qué una explosión no suena en el espacio? 🚀",
+  "descripcion": "Una explosión en el espacio podría verse impresionante, pero no escucharías nada: el sonido necesita un medio material para propagarse. #Variado #Curiosidades #Ciencia #Espacio #DatosCuriosos"
+}
