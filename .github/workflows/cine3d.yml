@@ -1,0 +1,52 @@
+name: VARIADO cine 3D (60 FPS)
+on:
+  push:
+    paths:
+      - 'cinejobs/**/job.json'
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: 'Carpeta cinejobs/<id>'
+        required: true
+permissions:
+  contents: write
+jobs:
+  cine3d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and audio tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y blender ffmpeg
+          python3 -m pip install --user --break-system-packages edge-tts || python3 -m pip install --user edge-tts
+      - name: Select job and build audio
+        id: setup
+        env:
+          INPUT_JOB: ${{ github.event.inputs.job_id }}
+        run: |
+          JOB="$INPUT_JOB"
+          if [ -z "$JOB" ]; then JOB=$(git diff-tree --no-commit-id --name-only -r HEAD | grep '^cinejobs/.*/job.json$' | head -1 | cut -d/ -f2); fi
+          if [ -z "$JOB" ]; then echo "Missing job"; exit 1; fi
+          echo "job=$JOB" >> "$GITHUB_OUTPUT"
+          mkdir -p output
+          python3 cine3d/audio.py "cinejobs/$JOB/job.json" output/voice.mp3
+      - name: Render vertical 60 FPS
+        run: |
+          blender -b -t 2 --python cine3d/render.py -- "cinejobs/${{ steps.setup.outputs.job }}/job.json" vertical output/vertical.mp4
+      - name: Render horizontal 60 FPS
+        run: |
+          blender -b -t 2 --python cine3d/render.py -- "cinejobs/${{ steps.setup.outputs.job }}/job.json" horizontal output/horizontal.mp4
+      - name: Mux Spanish narration, check duration and FPS
+        run: |
+          set -e
+          for ratio in vertical horizontal; do
+            ffmpeg -y -v error -i "output/$ratio.mp4" -itsoffset 0.50 -i output/voice.mp3 -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -t 21.2 "output/${{ steps.setup.outputs.job }}-$ratio.mp4"
+            ffprobe -v error -show_entries stream=width,height,r_frame_rate -of default=nw=1 "output/${{ steps.setup.outputs.job }}-$ratio.mp4"
+          done
+      - name: Publish MP4 files to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "cine-${{ steps.setup.outputs.job }}" "output/${{ steps.setup.outputs.job }}-vertical.mp4" "output/${{ steps.setup.outputs.job }}-horizontal.mp4" --title "VARIADO 3D - ${{ steps.setup.outputs.job }}" --notes "Video 3D de Variado, 21.2s, 60 FPS, dos composiciones."
