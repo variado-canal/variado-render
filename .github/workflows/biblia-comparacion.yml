@@ -33,7 +33,9 @@ jobs:
           ID=$(basename "$(dirname "$JOB")")
           echo "JOB_ID=$ID" >> "$GITHUB_ENV"
           python3 render_remotion.py "$JOB" "variado-$ID.mp4"
-          ffprobe -v error -show_entries stream=width,height,r_frame_rate,duration -of default=nw=1 "variado-$ID.mp4"
+
+          test -s "variado-$ID.mp4"
+          ls -lh "variado-$ID.mp4"
       - name: Publish comparison MP4
         env:
           GH_TOKEN: ${{ github.token }}
