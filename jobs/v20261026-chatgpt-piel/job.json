@@ -1,0 +1,164 @@
+{
+  "job_id": "v20261026-chatgpt-piel",
+  "titulo": "Por qué tu piel se pone de gallina",
+  "motor": "director",
+  "voz_edge": "es-MX-JorgeNeural",
+  "rate": "+14%",
+  "pitch": "+2Hz",
+  "escenas": [
+    {
+      "texto": "¿Sabías que tu piel tiene pequeños músculos capaces de levantar cada uno de tus vellos sin que tú lo decidas?",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        },
+        "remotion_tsx": "import React from 'react';\nimport {AbsoluteFill,Fondo,Rotulo,Etiqueta,Contador,Ondas,Destello,Impacto,Camara,Carita,useS,en,clamp,interpolate,Easing,FONT} from './kit';\nconst INICIO=en('piel');\nconst FRIO=en('frío');\nconst DENTRO=en('entramos');\nconst RAIZ=en('raíz');\nconst MUSCULO=en('músculo');\nconst CONTRAE=en('contrae');\nconst MAMIFEROS=en('mamíferos');\nconst HUMANOS=en('humanos');\nconst MUSICA=en('música');\nconst FINAL=en('Envíaselo');\nconst ROSA='#ff8fb1', AZUL='#9fe3ff', AMARILLO='#ffd84d';\nconst lerp=(s:number,a:number,b:number)=>interpolate(s,[a,b],[0,1],clamp);\nconst Vello:React.FC<{s:number;x:number;idx:number}> = ({s,x,idx})=>{\n const tension=lerp(s,CONTRAE,CONTRAE+0.5);\n const frio=lerp(s,FRIO,FRIO+0.5);\n const y=1110+((idx%3)-1)*34;\n const ang=(idx%2?1:-1)*(12+48*Math.max(frio,tension));\n return <g transform={'translate('+x+' '+y+')'}>\n   <path d=\"M -55 130 Q 0 80 55 130\" stroke=\"#ffb4c4\" strokeWidth={20} fill=\"none\"/>\n   <path d=\"M 0 90 Q 15 -130 45 -280\" stroke={AZUL} strokeWidth={11} fill=\"none\"\n     transform={'rotate('+ang+' 0 90)'}/>\n   <circle cx={0} cy={90} r={11} fill={AMARILLO}/>\n </g>;\n};\nconst Piel:React.FC<{s:number}> = ({s})=>{\n const interno=lerp(s,DENTRO-0.3,DENTRO+0.8);\n const tiron=lerp(s,CONTRAE,CONTRAE+0.45);\n return <AbsoluteFill>\n  <svg viewBox=\"0 0 1080 1920\" width=\"1080\" height=\"1920\">\n   <rect x=\"0\" y=\"975\" width=\"1080\" height=\"945\" fill=\"#4f235d\"/>\n   <path d=\"M 0 990 Q 180 970 330 990 T 660 990 T 1080 990 L 1080 1170 L 0 1170 Z\" fill=\"#ffabbd\"/>\n   <rect x=\"0\" y=\"1170\" width=\"1080\" height=\"750\" fill=\"#bb627f\"/>\n   {[170,360,560,770,940].map((x,i)=><Vello key={i} s={s} x={x} idx={i}/>)}\n   <g opacity={interno}>\n    <path d=\"M 550 1020 L 565 1520\" stroke=\"#ffe3b2\" strokeWidth={46} strokeLinecap=\"round\"/>\n    <ellipse cx=\"570\" cy=\"1450\" rx=\"65\" ry=\"135\" fill=\"#873b62\" stroke={ROSA} strokeWidth={14}/>\n    <path d=\"M 565 1450 L 750 1230\" stroke=\"#ffd84d\" strokeWidth={30} strokeLinecap=\"round\"\n      transform={'translate('+(-45*tiron)+' '+(65*tiron)+')'}/>\n    <circle cx=\"740\" cy=\"1240\" r=\"34\" fill={AMARILLO}/>\n    <circle cx=\"725\" cy=\"1230\" r=\"5\" fill=\"#301538\"/>\n    <circle cx=\"748\" cy=\"1230\" r=\"5\" fill=\"#301538\"/>\n    <path d=\"M 725 1251 Q 739 1264 752 1251\" stroke=\"#301538\" strokeWidth={5} fill=\"none\"/>\n    {[0,1,2,3,4,5,6,7].map(i=><circle key={i} cx={350+i*63} cy={1550+Math.sin(i+s*2)*30}\n       r={8+i%3*4} fill={AZUL} opacity={0.3+0.5*interno}/>)}\n   </g>\n  </svg>\n  {interno>0.2 && <Etiqueta texto=\"músculo erector\" x={815} y={850} px={748} py={1230} t0={MUSCULO} size={27} color={AMARILLO}/>}\n </AbsoluteFill>;\n};\nconst Comparacion:React.FC<{s:number}> = ({s})=>{\n const p=lerp(s,MAMIFEROS,MAMIFEROS+0.5), q=lerp(s,HUMANOS,HUMANOS+0.5);\n return <AbsoluteFill style={{opacity:p}}>\n  <svg viewBox=\"0 0 1080 1920\" width=\"1080\" height=\"1920\">\n   <rect x=\"45\" y=\"710\" width=\"460\" height=\"760\" rx=\"65\" fill=\"#39294a\" stroke={AMARILLO} strokeWidth={8}/>\n   <rect x=\"575\" y=\"710\" width=\"460\" height=\"760\" rx=\"65\" fill=\"#39294a\" stroke={AZUL} strokeWidth={8}/>\n   {Array.from({length:45}).map((_,i)=><path key={i} d={'M '+(85+(i%9)*48)+' '+(850+Math.floor(i/9)*115)+' q -45 -70 -20 -100'} stroke={AMARILLO} strokeWidth={11} fill=\"none\"/>)}\n   {Array.from({length:9}).map((_,i)=><path key={i} d={'M '+(620+(i%3)*130)+' '+(920+Math.floor(i/3)*150)+' q 5 -35 13 -85'} stroke={AZUL} strokeWidth={8} fill=\"none\" opacity={q}/>)}\n  </svg>\n  <div style={{position:'absolute',top:570,left:140,fontFamily:FONT,color:AMARILLO,fontSize:50}}>PELAJE</div>\n  <div style={{position:'absolute',top:570,left:625,fontFamily:FONT,color:AZUL,fontSize:50}}>HUMANOS</div>\n </AbsoluteFill>;\n};\nexport const Escena:React.FC=()=>{\n const {s,lin}=useS();\n const comp=lerp(s,MAMIFEROS-0.3,MAMIFEROS+0.3)*(1-lerp(s,MUSICA-0.3,MUSICA+0.2));\n const fin=lerp(s,MUSICA-0.25,MUSICA+0.45);\n return <AbsoluteFill>\n  <Fondo colores={['#4b2380','#211345','#0b0620']} particulas={AZUL}/>\n  <AbsoluteFill style={{opacity:1-comp}}>\n   <Camara centroY={1080} paradas={[\n    {t:0,x:540,y:1080,zoom:1},\n    {t:DENTRO-0.25,x:550,y:1120,zoom:1.2},\n    {t:RAIZ,x:560,y:1300,zoom:3.8},\n    {t:MUSCULO,x:650,y:1320,zoom:2.6},\n    {t:CONTRAE+0.5,x:620,y:1200,zoom:2.1},\n    {t:MAMIFEROS-0.35,x:540,y:1080,zoom:1},\n    {t:MUSICA,x:540,y:1080,zoom:1},\n    {t:FINAL,x:540,y:1080,zoom:1}\n   ]}><Piel s={s}/></Camara>\n  </AbsoluteFill>\n  {comp>0 && <Comparacion s={s}/>}\n  {s>=CONTRAE && s<CONTRAE+1 && <Destello t0={CONTRAE}/>}\n  {s>=FRIO && s<FRIO+2 && <Ondas x={540} y={970} t0={FRIO}/>}\n  {s>=MUSICA && <div style={{position:'absolute',top:500,left:400,fontSize:110,opacity:fin,color:AMARILLO}}>♫ ♪</div>}\n  <Rotulo items={[[0,DENTRO,'tu piel por fuera'],[DENTRO,MAMIFEROS,'dentro de tu piel'],[MAMIFEROS,MUSICA,'el pelaje'],[MUSICA,999,'tu piel otra vez']]}/>\n </AbsoluteFill>;\n};"
+      }
+    },
+    {
+      "texto": "Cuando sientes frío o escuchas una canción emocionante, algo sorprendente comienza debajo de la superficie de tu piel.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    },
+    {
+      "texto": "Imagina que entramos por uno de esos vellos y encontramos una diminuta cuerda conectada a su raíz.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    },
+    {
+      "texto": "En realidad, es un músculo llamado erector del pelo, y recibe señales del sistema nervioso que actúa automáticamente.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    },
+    {
+      "texto": "Cuando ese músculo se contrae, tira del folículo, levanta el vello y forma una pequeña protuberancia en tu piel.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    },
+    {
+      "texto": "En muchos mamíferos, levantar el pelaje ayuda a atrapar aire y también puede hacer que parezcan más grandes.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    },
+    {
+      "texto": "En los humanos, nuestro vello es demasiado escaso para que ese efecto nos abrigue de manera importante.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    },
+    {
+      "texto": "Lo curioso es que no solo pasa por el frío, también puede aparecer con miedo, música o emociones intensas.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    },
+    {
+      "texto": "Así que cuando vuelvas a sentir piel de gallina, recuerda esa diminuta maquinaria trabajando sola. Envíaselo a alguien que siempre se emociona con una canción.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          },
+          {
+            "k": "icono"
+          }
+        ],
+        "camara": {
+          "zoom": 1.1
+        }
+      }
+    }
+  ]
+}
