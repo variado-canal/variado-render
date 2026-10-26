@@ -22,7 +22,7 @@ jobs:
         run: |
           python3 -m pip install --break-system-packages -q numpy edge-tts || python3 -m pip install -q numpy edge-tts
           npm --prefix remotion ci --no-audit --no-fund
-          JOB=$(git diff-tree --no-commit-id --name-only -r HEAD | grep '^becariojobs/.*/job.json$' | head -1)
+          JOB=$(find becariojobs -mindepth 2 -maxdepth 2 -name job.json | sort | tail -1)
           if [ -z "$JOB" ]; then echo 'No job detected'; exit 1; fi
           ID=$(basename $(dirname "$JOB"))
           echo "JOB_ID=$ID" >> "$GITHUB_ENV"
