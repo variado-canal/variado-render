@@ -1,0 +1,110 @@
+{
+  "job_id": "v20261026-becario-colores-prueba2",
+  "titulo": "¿Y si los colores no existen?",
+  "motor": "director",
+  "voz_edge": "es-MX-JorgeNeural",
+  "rate": "+14%",
+  "pitch": "+2Hz",
+  "escenas": [
+    {
+      "texto": "¿Y si te dijera que los colores no existen como tú crees?",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ],
+        "remotion_tsx": "import React from 'react';\nimport {AbsoluteFill, Fondo, useS, en, interpolate, Easing, clamp, FONT} from './kit';\nconst C='#9fe3ff',Y='#ffd84d',P='#ff8fb1';\nconst ease=(s:number,a:number,b:number)=>interpolate(s,[a,b],[0,1],clamp);\nconst stages=[\n {word:'ojos',label:'TUS OJOS',sub:'captan la luz',icon:'◉'},\n {word:'cerebro',label:'TU CEREBRO',sub:'interpreta la imagen',icon:'✦'},\n {word:'color',label:'EL COLOR',sub:'no está en el objeto',icon:'●'},\n {word:'longitudes',label:'LONGITUDES',sub:'de onda diferentes',icon:'≈'},\n {word:'rojo',label:'ROJO',sub:'ondas más largas',icon:'●'},\n {word:'azul',label:'AZUL',sub:'ondas más cortas',icon:'●'},\n {word:'realidad',label:'LA REALIDAD',sub:'se construye en tu mente',icon:'◉'}\n];\nconst times=stages.map(x=>en(x.word));\nexport const SUBS={arriba:1650,size:51,acento:Y};\nexport const Escena:React.FC=()=>{\n const {s}=useS();\n const idx=Math.max(0,times.reduce((a,t,i)=>s>=t?i:a,0));\n const t=times[idx]||0,local=Math.max(0,s-t),p=ease(local,0,.52);\n const xs=Array.from({length:28},(_,i)=>i);\n const current=stages[idx];\n const intro=ease(s,0,.5)*(1-ease(s,times[0]-.4,times[0]));\n return <AbsoluteFill style={{background:'#08091d',fontFamily:FONT,color:'#fff'}}>\n <Fondo colores={['#39206b','#190f39','#08091d']} cantidad={16}/>\n <div style={{position:'absolute',top:75,left:72,fontSize:29,letterSpacing:8,color:C,fontWeight:800}}>VARIADO / CIENCIA</div>\n <div style={{position:'absolute',left:115,top:450,width:850,height:850,borderRadius:'50%',border:'3px solid rgba(159,227,255,.15)',transform:'scale('+(1+.025*Math.sin(s*2))+')'}}/>\n {xs.map(i=>{const angle=i*Math.PI*2/28+s*(.08+(i%3)*.01);const r=250+(i%4)*50;return <div key={i} style={{position:'absolute',left:540+Math.cos(angle)*r,top:865+Math.sin(angle)*r,width:6+i%3*5,height:6+i%3*5,borderRadius:'50%',background:i%3===0?Y:C,opacity:.3+.4*Math.sin(s*2+i)**2}}/>})}\n <div style={{position:'absolute',top:355,left:65,right:65,opacity:intro,transform:'scale('+(1.22-.22*intro)+')',textAlign:'center',fontWeight:900,fontSize:96,lineHeight:1.05,textShadow:'0 12px 45px #000'}}>¿Y SI LOS<br/><span style={{color:Y}}>COLORES</span><br/>NO EXISTEN?</div>\n <div style={{position:'absolute',top:520,left:0,width:1080,textAlign:'center',fontSize:210,opacity:p,transform:'scale('+(0.4+p*.6)+') rotate('+((1-p)*-16)+'deg)',filter:'drop-shadow(0 12px 40px rgba(159,227,255,.5))',color:current.word==='rojo'?'#ff556f':current.word==='azul'?C:Y}}>{current.icon}</div>\n <div style={{position:'absolute',top:1025,left:60,right:60,textAlign:'center',fontSize:88,fontWeight:900,opacity:p,transform:'translateY('+((1-p)*110)+'px)',lineHeight:1.04}}>{current.label}</div>\n <div style={{position:'absolute',top:1155,left:85,right:85,textAlign:'center',fontSize:50,color:C,opacity:p}}>{current.sub}</div>\n <div style={{position:'absolute',top:1400,left:80,width:920,height:6,background:'rgba(255,255,255,.15)',borderRadius:6}}><div style={{width:(100*Math.min(1,s/36))+'%',height:'100%',background:Y,borderRadius:6}}/></div>\n </AbsoluteFill>;\n};"
+      }
+    },
+    {
+      "texto": "Tus ojos captan la luz que rebota en los objetos.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Pero es tu cerebro el que interpreta esa información.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "El color que percibes no está guardado dentro de las cosas.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "En realidad, la luz tiene longitudes de onda diferentes.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "El rojo corresponde a ciertas ondas más largas dentro de la luz visible.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Y el azul a otras más cortas.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Tu cerebro convierte esas señales en la realidad llena de colores que conoces.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    },
+    {
+      "texto": "Así que la próxima vez que veas algo hermoso, recuerda: tu mente también pinta el mundo.",
+      "plantilla": "guion",
+      "p": {
+        "piezas": [
+          {
+            "k": "formas"
+          }
+        ]
+      }
+    }
+  ]
+}
