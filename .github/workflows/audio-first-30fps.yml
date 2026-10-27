@@ -1,0 +1,49 @@
+name: VARIADO Audio First 30FPS
+on:
+  push:
+    paths:
+      - 'playbook30/audiojobs/**/job.json'
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: remotion/package-lock.json
+      - name: Install standalone tools
+        run: |
+          python3 -m pip install --break-system-packages -q imageio-ffmpeg edge-tts numpy pillow || python3 -m pip install -q imageio-ffmpeg edge-tts numpy pillow
+          mkdir -p "$HOME/.local/bin"
+          python3 -c 'import imageio_ffmpeg,shutil,os;shutil.copy2(imageio_ffmpeg.get_ffmpeg_exe(),os.path.expanduser("~/.local/bin/ffmpeg"))'
+          chmod +x "$HOME/.local/bin/ffmpeg"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          npm --prefix remotion ci --no-audit --no-fund
+      - name: Stage 1 voice before animation
+        run: |
+          JOB=$(find playbook30/audiojobs -mindepth 2 -maxdepth 2 -name job.json | sort | tail -1)
+          test -n "$JOB"
+          ID=$(basename "$(dirname "$JOB")")
+          echo "JOB=$JOB" >> "$GITHUB_ENV"
+          echo "JOB_ID=$ID" >> "$GITHUB_ENV"
+          FFMPEG="$HOME/.local/bin/ffmpeg" python3 playbook30/audio_first.py "$JOB"
+      - name: Stage 2 check synchronized animated shot timeline
+        run: |
+          python3 playbook30/check_shots.py "$JOB"
+      - name: Stage 3 native 30 FPS render using frozen voice
+        run: |
+          python3 playbook30/render_audiofirst_scene.py "$JOB" "variado-$JOB_ID.mp4"
+      - name: Stage 4 validate video file
+        run: |
+          test -s "variado-$JOB_ID.mp4"
+          python3 playbook30/check_video.py "variado-$JOB_ID.mp4"
+      - name: Publish as experimental release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "audiofirst-$JOB_ID" "variado-$JOB_ID.mp4" --title "VARIADO Audio-first $JOB_ID" --notes "Experimental 30 FPS audiovisual render; not production-approved until visually inspected."
