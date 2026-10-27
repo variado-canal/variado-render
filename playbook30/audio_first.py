@@ -16,7 +16,7 @@ def main():
     filename=sys.argv[1]
     job=json.load(open(filename,encoding='utf-8'))
     assert job['voz_edge']=='es-MX-JorgeNeural' and job['rate']=='+14%' and job['pitch']=='+2Hz', 'Voice parameters changed'
-    wd=pathlib.Path('work_audio_locked_'+job['job_id'])
+    wd=pathlib.Path('work_audio_locked_'+job['job_id']).resolve()
     wd.mkdir(exist_ok=True)
     public=pathlib.Path('remotion/public')
     public.mkdir(exist_ok=True,parents=True)
