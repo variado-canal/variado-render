@@ -1,0 +1,51 @@
+{
+  "job_id": "v20261027-punto-ciego-audio-first-30",
+  "titulo": "El agujero invisible de tus ojos",
+  "scene_file": "playbook30/scenes/punto_ciego.tsx",
+  "motor": "remotion",
+  "voz_edge": "es-MX-JorgeNeural",
+  "rate": "+14%",
+  "pitch": "+2Hz",
+  "escenas": [
+    {
+      "texto": "Hay un punto invisible dentro de tus ojos. Y tu cerebro lo esconde.",
+      "plantilla": "guion",
+      "p": {}
+    },
+    {
+      "texto": "Tapa tu ojo izquierdo, mira esta cruz con el derecho y acércate o aléjate lentamente de la pantalla.",
+      "plantilla": "guion",
+      "p": {}
+    },
+    {
+      "texto": "A cierta distancia, el punto desaparece. Esta animación simula el efecto que puedes comprobar tú mismo.",
+      "plantilla": "guion",
+      "p": {}
+    },
+    {
+      "texto": "¿Por qué ocurre? Vamos a entrar dentro del ojo para descubrirlo.",
+      "plantilla": "guion",
+      "p": {}
+    },
+    {
+      "texto": "En la retina existe una zona por donde sale el nervio óptico. Allí no hay células que detecten luz.",
+      "plantilla": "guion",
+      "p": {}
+    },
+    {
+      "texto": "Las señales visuales llegan al cerebro, pero de esa pequeña región no llega información.",
+      "plantilla": "guion",
+      "p": {}
+    },
+    {
+      "texto": "Tu cerebro completa el espacio usando lo que hay alrededor. Por eso no ves un agujero negro.",
+      "plantilla": "guion",
+      "p": {}
+    },
+    {
+      "texto": "Ahora prueba con un amigo. ¿A qué distancia logran hacer desaparecer el punto?",
+      "plantilla": "guion",
+      "p": {}
+    }
+  ]
+}
