@@ -1,0 +1,39 @@
+name: VARIADO Playbook 2.5D 30fps experimental
+on:
+  push:
+    paths:
+      - 'playbook30/jobs/**/job.json'
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: remotion/package-lock.json
+      - name: Install video tools
+        run: |
+          python3 -m pip install --break-system-packages -q imageio-ffmpeg edge-tts numpy || python3 -m pip install -q imageio-ffmpeg edge-tts numpy
+          mkdir -p "$HOME/.local/bin"
+          python3 -c 'import imageio_ffmpeg, shutil, os; shutil.copy2(imageio_ffmpeg.get_ffmpeg_exe(), os.path.expanduser("~/.local/bin/ffmpeg"))'
+          chmod +x "$HOME/.local/bin/ffmpeg"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          npm --prefix remotion ci --no-audit --no-fund
+      - name: Render narrated 2.5D sequence at native 30 fps
+        run: |
+          JOB=$(find playbook30/jobs -mindepth 2 -maxdepth 2 -name job.json | sort | tail -1)
+          test -n "$JOB"
+          ID=$(basename "$(dirname "$JOB")")
+          echo "JOB_ID=$ID" >> "$GITHUB_ENV"
+          FFMPEG="$HOME/.local/bin/ffmpeg" python3 playbook30/render30.py "$JOB" "variado-$ID.mp4"
+          test -s "variado-$ID.mp4"
+      - name: Publish finished video
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "playbook30-$JOB_ID" "variado-$JOB_ID.mp4" --title "VARIADO Playbook 30fps - $JOB_ID" --notes "30fps native Remotion 2.5D, es-MX-JorgeNeural +14%, original scripted word-synced visuals. Separate from production pipeline."
