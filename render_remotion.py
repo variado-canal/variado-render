@@ -6,6 +6,15 @@
 # y render.yml cae al motor anterior (render_motion.py).
 import asyncio, json, os, re, shutil, subprocess, sys, wave
 
+import unicodedata
+
+
+def _norm(x):
+    s = unicodedata.normalize('NFD', str(x).lower())
+    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+    return re.sub(r'[^a-z0-9]', '', s)
+
+
 GAP = 0.06
 MIN_DUR = 1.1
 TAIL = 0.6
@@ -78,8 +87,12 @@ def voz(job, work):
         sh([FF, '-y', '-v', 'error', '-i', mp3, '-ar', '44100', '-ac', '1', '-af', 'apad=whole_dur=%.3f' % dur, wav])
         lista.append(wav)
         primera = True
+        clave = _norm(sc['p'].get('key', '')) if isinstance(sc.get('p'), dict) else ''
+        marcada = False
         for (w, a, dd) in alinea(sc['texto'], ev, d):
-            palabras.append({'w': w, 't': round(t0 + a, 3), 'd': round(dd, 3), 'f': primera})
+            k = bool(clave) and not marcada and _norm(w) == clave
+            marcada = marcada or k
+            palabras.append({'w': w, 't': round(t0 + a, 3), 'd': round(dd, 3), 'f': primera, 'k': k})
             primera = bool(re.search(r'[.!?…]$', w))
         t0 += dur
     lst = os.path.join(work, 'lista.txt')
