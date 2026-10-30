@@ -3,8 +3,8 @@
 # Voz igual que render_motion.py: edge-tts por escena con voz/rate/pitch del job,
 # se recorta el silencio final de cada escena y se deja la misma pausa (GAP/MIN_DUR/TAIL).
 # La escena (TSX) viene en escenas[i].p.remotion_tsx del job; si falta o falla, sale con error
-# y render.yml cae al motor anterior (render_motion.py).
-import asyncio, json, os, re, shutil, subprocess, sys, wave
+# y entra la reparación automática.
+import asyncio, json, os, re, shutil, subprocess, sys, time, wave
 
 import unicodedata
 
@@ -48,6 +48,17 @@ async def _tts(texto, voz, rate, pitch, mp3):
     return ev
 
 
+def tts_seguro(texto, voz, rate, pitch, mp3):
+    # edge-tts a veces no devuelve audio: se reintenta antes de fallar.
+    for n in range(4):
+        try:
+            return asyncio.run(_tts(texto, voz, rate, pitch, mp3))
+        except Exception:
+            if n == 3:
+                raise
+            time.sleep(5 * (n + 1))
+
+
 def alinea(texto, ev, d):
     # Palabras del texto (con su puntuación) con el tiempo de la voz; si no cuadran, reparte por largo.
     ws = texto.split()
@@ -74,7 +85,7 @@ def voz(job, work):
     lista, palabras, t0 = [], [], 0.0
     for i, sc in enumerate(escenas):
         mp3 = os.path.join(work, 'v%02d.mp3' % i)
-        ev = asyncio.run(_tts(sc['texto'], voz_n, rate, pitch, mp3))
+        ev = tts_seguro(sc['texto'], voz_n, rate, pitch, mp3)
         if not os.path.exists(mp3) or os.path.getsize(mp3) < 500:
             raise RuntimeError('sin audio en escena %d' % i)
         tr = os.path.join(work, 't%02d.mp3' % i)
@@ -103,6 +114,18 @@ def voz(job, work):
     return {'dur': round(t0, 3), 'words': palabras}
 
 
+def nivela_sfx():
+    # Deja todos los efectos al mismo nivel, bajo, para que nunca tapen la voz.
+    d = os.path.join(RM, 'public', 'sfx')
+    if not os.path.isdir(d):
+        return
+    for n in sorted(os.listdir(d)):
+        a = os.path.join(d, n)
+        t = a + '.tmp.mp3'
+        sh([FF, '-y', '-v', 'error', '-i', a, '-af', 'loudnorm=I=-24:TP=-6:LRA=7', '-ar', '44100', t])
+        os.replace(t, a)
+
+
 def main():
     job_path, out = sys.argv[1], os.path.abspath(sys.argv[2])
     job = json.load(open(job_path, encoding='utf-8'))
@@ -112,6 +135,7 @@ def main():
     work = os.path.join(os.path.dirname(out), 'work_rm_' + str(job.get('job_id', 'x')))
     os.makedirs(work, exist_ok=True)
     os.makedirs(os.path.join(RM, 'public'), exist_ok=True)
+    nivela_sfx()
     data = voz(job, work)
     json.dump(data, open(os.path.join(RM, 'public', 'palabras.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     open(os.path.join(RM, 'src', 'Escena.tsx'), 'w', encoding='utf-8').write(tsx)
