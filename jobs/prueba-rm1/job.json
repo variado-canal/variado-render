@@ -1,0 +1,27 @@
+{
+    "escenas":  [
+                    {
+                        "p":  {
+                                  "key":  "sueldo",
+                                  "remotion_tsx":  "// PLANTILLA DE RESPALDO Variado/Dinero (modo emergencia): sale en Remotion aunque la IA no logre dibujar el guion.\n// emergencia.py rellena ACENTO y MOMENTOS con la palabra clave de cada escena. Si una palabra no se encuentra en la\n// voz, cae en su fracción de la duración, así que esta plantilla nunca rompe el render.\nimport React from \u0027react\u0027;\nimport {AbsoluteFill, DUR, FONT, Fondo, Ondas, clamp, en, interpolate, useS} from \u0027./kit\u0027;\n\nconst ACENTO = \u0027#E7FF00\u0027;\nconst MOMENTOS: [string, number][] = [[\"sueldo\",1],[\"cuenta\",1],[\"minuto\",1]];\n\nconst momento = (i: number) =\u003e {\n  try {\n    return en(MOMENTOS[i][0], MOMENTOS[i][1]);\n  } catch {\n    return (DUR * i) / MOMENTOS.length;\n  }\n};\nconst TIEMPOS = MOMENTOS.map((_, i) =\u003e momento(i));\n\nexport const SUBS = {acento: ACENTO};\nexport const SFX = TIEMPOS.filter((t, i) =\u003e i === 0 || t - TIEMPOS[i - 1] \u003e= 2).map((t) =\u003e ({t, s: \u0027whoosh_02\u0027}));\n\nconst Palabra: React.FC\u003c{texto: string; t0: number; t1: number}\u003e = ({texto, t0, t1}) =\u003e {\n  const {s, spr} = useS();\n  if (s \u003c t0 || s \u003e t1) return null;\n  const e = spr(t0, 12, 180);\n  const fuera = interpolate(s, [t1 - 0.25, t1], [1, 0], clamp);\n  const size = Math.min(190, 1500 / Math.max(texto.length, 1));\n  return (\n    \u003cAbsoluteFill style={{alignItems: \u0027center\u0027, justifyContent: \u0027center\u0027, opacity: fuera}}\u003e\n      \u003cdiv style={{fontFamily: FONT, fontWeight: 800, fontSize: size, color: ACENTO, textShadow: \u00270 12px 40px rgba(0,0,0,0.55)\u0027, transform: `translateY(${(1 - e) * 120}px) scale(${0.8 + 0.2 * e + (s - t0) * 0.012})`}}\u003e{texto}\u003c/div\u003e\n    \u003c/AbsoluteFill\u003e\n  );\n};\n\nexport const Escena: React.FC = () =\u003e (\n  \u003cAbsoluteFill style={{overflow: \u0027hidden\u0027}}\u003e\n    \u003cFondo /\u003e\n    {TIEMPOS.map((t, i) =\u003e (\n      \u003cOndas key={i} x={540} y={960} t0={t} color={ACENTO} /\u003e\n    ))}\n    {MOMENTOS.map(([p], i) =\u003e (\n      \u003cPalabra key={i} texto={p.toUpperCase()} t0={TIEMPOS[i]} t1={i + 1 \u003c TIEMPOS.length ? TIEMPOS[i + 1] : DUR} /\u003e\n    ))}\n  \u003c/AbsoluteFill\u003e\n);\n"
+                              },
+                        "texto":  "Tu sueldo llega y parece mucho."
+                    },
+                    {
+                        "p":  {
+                                  "key":  "cuenta"
+                              },
+                        "texto":  "Pero cada cuenta se lleva una parte."
+                    },
+                    {
+                        "p":  {
+                                  "key":  "minuto"
+                              },
+                        "texto":  "Guarda algo en el primer minuto."
+                    }
+                ],
+    "pitch":  "+2Hz",
+    "voz_edge":  "es-MX-JorgeNeural",
+    "rate":  "+8%",
+    "job_id":  "prueba-rm1"
+}
