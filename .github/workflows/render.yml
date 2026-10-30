@@ -37,24 +37,12 @@ jobs:
           fc-list | grep -i "barlow" || true
       - name: Renderizar video
         run: |
-          if [[ "${JOB_ID}" == d* ]]; then SCRIPT=render_dinero.py; else SCRIPT=render.py; fi
-          if grep -q '"remotion_tsx"' "jobs/${JOB_ID}/job.json"; then
-            python3 -m pip install --break-system-packages -q numpy edge-tts || python3 -m pip install -q numpy edge-tts
-            if python3 render_remotion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"; then
-              echo "Render Remotion OK"
-            else
-              echo "::warning::Remotion fallo; se usa el motor anterior (director)"
-              python3 render_motion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
-            fi
-          elif grep -q '"motor"' "jobs/${JOB_ID}/job.json"; then
-            python3 -m pip install --break-system-packages -q numpy edge-tts || python3 -m pip install -q numpy edge-tts
-            python3 render_motion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
-          elif grep -q voz_edge "jobs/${JOB_ID}/job.json"; then
-            python3 -m pip install --break-system-packages -q edge-tts || python3 -m pip install -q edge-tts
-            RENDER_SCRIPT="${SCRIPT%.py}" python3 voz_edge.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
-          else
-            python3 "$SCRIPT" "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
+          if ! grep -q '"remotion_tsx"' "jobs/${JOB_ID}/job.json"; then
+            echo "::error::Job sin remotion_tsx: no se renderiza"
+            exit 1
           fi
+          python3 -m pip install --break-system-packages -q numpy edge-tts || python3 -m pip install -q numpy edge-tts
+          python3 render_remotion.py "jobs/${JOB_ID}/job.json" "video-${JOB_ID}.mp4"
       - name: Publicar video en Release
         run: gh release create "v-${JOB_ID}" "video-${JOB_ID}.mp4" --title "video-${JOB_ID}" --notes "VARIADO"
       - name: Limpiar paquete del repositorio
