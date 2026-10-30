@@ -5,7 +5,7 @@ import React from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Easing} from 'remotion';
 import data from '../public/palabras.json';
 
-export type Palabra = {w: string; t: number; d: number; f?: boolean};
+export type Palabra = {w: string; t: number; d: number; f?: boolean; k?: boolean};
 export const DUR: number = (data as {dur: number}).dur;
 export const words: Palabra[] = (data as {words: Palabra[]}).words;
 export const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
@@ -86,6 +86,9 @@ export const Fondo: React.FC<{colores?: [string, string, string]; manchas?: stri
   );
 };
 
+// Método V2: si alguna palabra trae k (la key de su escena), los subtítulos van al estilo V2 (blanco grueso y la key en caja de acento).
+const CONCLAVE = words.some((w) => w.k);
+
 /** Subtítulos arriba: hasta 3 palabras por bloque sin mezclar frases; la palabra dicha va seleccionada. */
 export const Subtitulos: React.FC<{arriba?: number; size?: number; acento?: string}> = ({arriba = 210, size = 64, acento = '#7fb2ff'}) => {
   const {s, spr} = useS();
@@ -107,6 +110,15 @@ export const Subtitulos: React.FC<{arriba?: number; size?: number; acento?: stri
     <div style={{position: 'absolute', top: arriba, left: 40, right: 40, display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 18, opacity: pop, transform: `translateY(${(1 - pop) * 20}px)`}}>
       {g.map((j) => {
         const act = s >= T(j) && (j + 1 >= words.length || s < T(j + 1));
+        if (CONCLAVE) {
+          const esK = !!words[j].k && s >= T(j) - 0.05;
+          const pulso = esK ? 1 + 0.08 * Math.max(0, 1 - (s - T(j)) * 4) : 1;
+          return (
+            <div key={j} style={{position: 'relative', fontFamily: FONT, fontWeight: 800, fontSize: size, color: esK ? '#111' : '#fff', padding: '2px 14px', borderRadius: 14, background: esK ? acento : 'transparent', transform: `scale(${pulso})`, textShadow: esK ? 'none' : '0 3px 0 rgba(0,0,0,0.55), 0 6px 18px rgba(0,0,0,0.6)'}}>
+              {words[j].w}
+            </div>
+          );
+        }
         return (
           <div key={j} style={{position: 'relative', fontFamily: FONT, fontWeight: act ? 800 : 600, fontSize: size, color: act ? '#fff' : 'rgba(255,255,255,0.55)', padding: '0 12px', textShadow: '0 4px 18px rgba(0,0,0,0.6)'}}>
             {words[j].w}
