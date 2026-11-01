@@ -2,6 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Audio, Composition, Sequence, staticFile} from 'remotion';
 import {DUR, Subtitulos} from './kit';
 import * as E from './Escena';
+import {Acabado} from './Acabado';
 
 const FPS = 60;
 const VOL_SFX = 0.4; // sfx nivelados por render_remotion.py: siempre por debajo de la voz
@@ -11,7 +12,7 @@ const Video: React.FC = () => {
   const subs = (E as {SUBS?: {arriba?: number; size?: number; acento?: string}}).SUBS || {};
   return (
     <AbsoluteFill style={{backgroundColor: '#000', overflow: 'hidden'}}>
-      <E.Escena />
+      <Acabado cortes={(E as {CORTES?: number[]}).CORTES || []}><E.Escena /></Acabado>
       <Subtitulos {...subs} />
       <Audio src={staticFile('voz.wav')} />
       {((E as {SFX?: {t: number; s: string}[]}).SFX || []).map((x, i) => (
