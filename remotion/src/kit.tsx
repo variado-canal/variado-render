@@ -10,6 +10,7 @@ export const DUR: number = (data as {dur: number}).dur;
 export const words: Palabra[] = (data as {words: Palabra[]}).words;
 export const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 export {Easing, interpolate, spring, AbsoluteFill};
+export {Entrar} from './Entrar';
 
 export const FONT = 'Poppins, "Segoe UI", Arial, sans-serif';
 export const MANO = '"Patrick Hand", "Segoe Print", cursive';
