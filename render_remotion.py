@@ -142,7 +142,11 @@ def main():
     npx = 'npx.cmd' if os.name == 'nt' else 'npx'
     if not os.path.isdir(os.path.join(RM, 'node_modules')):
         sh(['npm.cmd' if os.name == 'nt' else 'npm', 'ci', '--no-audit', '--no-fund'], cwd=RM)
-    sh([npx, 'remotion', 'render', 'src/index.ts', 'Video', out, '--log=error'], cwd=RM)
+    gl = []
+    if '@remotion/three' in tsx:
+        sh(['npm', 'i', '--no-save', '--no-audit', '--no-fund', '@remotion/three@4.0.300', 'three@0.170.0', '@react-three/fiber@8.17.10'], cwd=RM)
+        gl = ['--gl=swangle', '--concurrency=2']
+    sh([npx, 'remotion', 'render', 'src/index.ts', 'Video', out, '--log=error'] + gl, cwd=RM)
     shutil.rmtree(work, ignore_errors=True)
     print('listo', out, data['dur'], 's')
 
