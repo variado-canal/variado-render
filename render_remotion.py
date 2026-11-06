@@ -48,6 +48,14 @@ async def _tts(texto, voz, rate, pitch, mp3):
     return ev
 
 
+def tono(sc, campo, defecto, patron):
+    # Tono por escena (p.voz: rate/pitch/pausa) para dar emoción; si viene mal, usa el del job.
+    p = sc.get('p') if isinstance(sc.get('p'), dict) else {}
+    tv = p.get('voz') if isinstance(p.get('voz'), dict) else {}
+    v = str(tv.get(campo, ''))
+    return v if re.match(patron, v) else defecto
+
+
 def tts_seguro(texto, voz, rate, pitch, mp3):
     # edge-tts a veces no devuelve audio: se reintenta antes de fallar.
     for n in range(4):
@@ -85,7 +93,8 @@ def voz(job, work):
     lista, palabras, t0 = [], [], 0.0
     for i, sc in enumerate(escenas):
         mp3 = os.path.join(work, 'v%02d.mp3' % i)
-        ev = tts_seguro(sc['texto'], voz_n, rate, pitch, mp3)
+        ev = tts_seguro(sc['texto'], voz_n, tono(sc, 'rate', rate, r'^[+-]\d{1,2}%$'), tono(sc, 'pitch', pitch, r'^[+-]\d{1,2}Hz$'), mp3)
+        pausa = min(float(tono(sc, 'pausa', '0', r'^\d(\.\d+)?$')), 1.2)
         if not os.path.exists(mp3) or os.path.getsize(mp3) < 500:
             raise RuntimeError('sin audio en escena %d' % i)
         tr = os.path.join(work, 't%02d.mp3' % i)
@@ -93,7 +102,7 @@ def voz(job, work):
         if os.path.getsize(tr) > 500:
             mp3 = tr
         d = dur_audio(mp3, work)
-        dur = max(MIN_DUR, d + GAP) + (TAIL if i == len(escenas) - 1 else 0)
+        dur = max(MIN_DUR, d + GAP + pausa) + (TAIL if i == len(escenas) - 1 else 0)
         wav = os.path.join(work, 'v%02d.wav' % i)
         sh([FF, '-y', '-v', 'error', '-i', mp3, '-ar', '44100', '-ac', '1', '-af', 'apad=whole_dur=%.3f' % dur, wav])
         lista.append(wav)
