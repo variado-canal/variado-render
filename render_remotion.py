@@ -1,10 +1,11 @@
 # Render con Remotion (estilo explicativo animado) para Variado y Dinero.
 # Uso: python3 render_remotion.py jobs/<id>/job.json video-<id>.mp4
-# Voz igual que render_motion.py: edge-tts por escena con voz/rate/pitch del job,
-# se recorta el silencio final de cada escena y se deja la misma pausa (GAP/MIN_DUR/TAIL).
+# Voz igual que render_motion.py: edge-tts por escena con voz/rate/pitch del job.
+# 8-nov: se acortan los silencios de edge-tts (inicio, entre frases y entre escenas) para que suene
+# hablado y no leído; los tiempos de cada palabra se corrigen con los cortes.
 # La escena (TSX) viene en escenas[i].p.remotion_tsx del job; si falta o falla, sale con error
 # y entra la reparación automática.
-import asyncio, json, os, re, shutil, subprocess, sys, time, wave
+import array, asyncio, json, os, re, shutil, subprocess, sys, time, wave
 
 import unicodedata
 
@@ -15,9 +16,12 @@ def _norm(x):
     return re.sub(r'[^a-z0-9]', '', s)
 
 
-GAP = 0.06
-MIN_DUR = 1.1
+GAP = 0.2         # silencio entre escenas (respiro natural entre frases)
+MIN_DUR = 0.7
 TAIL = 0.6
+PAUSA_MAX = 0.2   # tope de cada pausa dentro de una escena (edge-tts deja 0.5 a 0.8 s tras cada punto)
+INICIO = 0.03     # silencio que se deja al empezar cada escena
+SIL_DB = -40      # por debajo de esto es silencio
 FF = os.environ.get('FFMPEG', 'ffmpeg')
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RM = os.path.join(AQUI, 'remotion')
@@ -67,6 +71,69 @@ def tts_seguro(texto, voz, rate, pitch, mp3):
             time.sleep(5 * (n + 1))
 
 
+def compacta(mp3, ev, wav):
+    # Quita el silencio del inicio y del final y deja cada pausa interna en PAUSA_MAX como mucho.
+    # Devuelve la duración nueva y los tiempos de palabra movidos según lo cortado.
+    sh([FF, '-y', '-v', 'error', '-i', mp3, '-ar', '44100', '-ac', '1', '-sample_fmt', 's16', wav])
+    with wave.open(wav, 'rb') as w:
+        sr = w.getframerate()
+        x = array.array('h', w.readframes(w.getnframes()))
+    if sys.byteorder == 'big':
+        x.byteswap()
+    win = sr // 100
+    n = len(x) // win
+    if n < 5:
+        return len(x) / sr, ev
+    umbral = 32768 * 10 ** (SIL_DB / 20)
+    sil = [max(x[i * win:(i + 1) * win]) < umbral and -min(x[i * win:(i + 1) * win]) < umbral for i in range(n)]
+    total = len(x) / sr
+    cortes, i = [], 0
+    while i < n:
+        if not sil[i]:
+            i += 1
+            continue
+        j = i
+        while j < n and sil[j]:
+            j += 1
+        ta, tb = i / 100, (total if j == n else j / 100)
+        if i == 0:
+            if tb - INICIO > 0:
+                cortes.append((0.0, tb - INICIO))
+        elif j == n:
+            cortes.append((ta + 0.02, total))
+        elif tb - ta > PAUSA_MAX:
+            cortes.append((ta + PAUSA_MAX / 2, tb - PAUSA_MAX / 2))
+        i = j
+    if not cortes:
+        return total, ev
+    y, a = array.array('h'), 0
+    for c0, c1 in cortes:
+        y.extend(x[a:int(c0 * sr)])
+        a = int(c1 * sr)
+    y.extend(x[a:])
+    if sys.byteorder == 'big':
+        y.byteswap()
+    with wave.open(wav, 'wb') as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(sr)
+        w.writeframes(y.tobytes())
+
+    def mueve(t):
+        q = 0.0
+        for c0, c1 in cortes:
+            if t >= c1:
+                q += c1 - c0
+            elif t > c0:
+                q += t - c0
+        return t - q
+    ev2 = []
+    for o, dd in ev:
+        o2 = mueve(o)
+        ev2.append((o2, max(0.05, mueve(o + dd) - o2)))
+    return len(y) / sr, ev2
+
+
 def alinea(texto, ev, d):
     # Palabras del texto (con su puntuación) con el tiempo de la voz; si no cuadran, reparte por largo.
     ws = texto.split()
@@ -94,17 +161,14 @@ def voz(job, work):
     for i, sc in enumerate(escenas):
         mp3 = os.path.join(work, 'v%02d.mp3' % i)
         ev = tts_seguro(sc['texto'], voz_n, tono(sc, 'rate', rate, r'^[+-]\d{1,2}%$'), tono(sc, 'pitch', pitch, r'^[+-]\d{1,2}Hz$'), mp3)
-        pausa = min(float(tono(sc, 'pausa', '0', r'^\d(\.\d+)?$')), 1.2)
+        pausa = min(float(tono(sc, 'pausa', '0', r'^\d(\.\d+)?$')), 0.4)
         if not os.path.exists(mp3) or os.path.getsize(mp3) < 500:
             raise RuntimeError('sin audio en escena %d' % i)
-        tr = os.path.join(work, 't%02d.mp3' % i)
-        sh([FF, '-y', '-v', 'error', '-i', mp3, '-af', 'areverse,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.05,areverse', tr])
-        if os.path.getsize(tr) > 500:
-            mp3 = tr
-        d = dur_audio(mp3, work)
+        tr = os.path.join(work, 't%02d.wav' % i)
+        d, ev = compacta(mp3, ev, tr)
         dur = max(MIN_DUR, d + GAP + pausa) + (TAIL if i == len(escenas) - 1 else 0)
         wav = os.path.join(work, 'v%02d.wav' % i)
-        sh([FF, '-y', '-v', 'error', '-i', mp3, '-ar', '44100', '-ac', '1', '-af', 'apad=whole_dur=%.3f' % dur, wav])
+        sh([FF, '-y', '-v', 'error', '-i', tr, '-ar', '44100', '-ac', '1', '-af', 'apad=whole_dur=%.3f' % dur, wav])
         lista.append(wav)
         primera = True
         clave = _norm(sc['p'].get('key', '')) if isinstance(sc.get('p'), dict) else ''
