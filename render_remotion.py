@@ -16,10 +16,13 @@ def _norm(x):
     return re.sub(r'[^a-z0-9]', '', s)
 
 
-GAP = 0.2         # silencio entre escenas (respiro natural entre frases)
+GAP = 0.4         # silencio entre escenas (fin de idea: deja asimilar)
 MIN_DUR = 0.7
 TAIL = 0.6
-PAUSA_MAX = 0.2   # tope de cada pausa dentro de una escena (edge-tts deja 0.5 a 0.8 s tras cada punto)
+# Tope de cada pausa dentro de una escena según la puntuación del guion (edge-tts deja 0.5 a 0.8 s tras cada punto).
+PAUSA_PUNTO = 0.4
+PAUSA_COMA = 0.2
+PAUSA_OTRA = 0.12
 INICIO = 0.03     # silencio que se deja al empezar cada escena
 SIL_DB = -40      # por debajo de esto es silencio
 FF = os.environ.get('FFMPEG', 'ffmpeg')
@@ -71,8 +74,21 @@ def tts_seguro(texto, voz, rate, pitch, mp3):
             time.sleep(5 * (n + 1))
 
 
-def compacta(mp3, ev, wav):
-    # Quita el silencio del inicio y del final y deja cada pausa interna en PAUSA_MAX como mucho.
+def tope_pausa(t, ev, ws):
+    # La pausa que empieza en t sigue a la última palabra dicha antes: su puntuación decide el largo.
+    if len(ev) != len(ws):
+        return PAUSA_PUNTO if t > 0 else PAUSA_OTRA
+    i = max([k for k, (o, d) in enumerate(ev) if o + d <= t + 0.06] or [-1])
+    w = ws[i] if i >= 0 else ''
+    if re.search(r'[.!?…]$', w):
+        return PAUSA_PUNTO
+    if re.search(r'[,;:]$', w):
+        return PAUSA_COMA
+    return PAUSA_OTRA
+
+
+def compacta(mp3, ev, wav, texto=''):
+    # Quita el silencio del inicio y del final y deja cada pausa interna en su tope según la puntuación.
     # Devuelve la duración nueva y los tiempos de palabra movidos según lo cortado.
     sh([FF, '-y', '-v', 'error', '-i', mp3, '-ar', '44100', '-ac', '1', '-sample_fmt', 's16', wav])
     with wave.open(wav, 'rb') as w:
@@ -87,6 +103,7 @@ def compacta(mp3, ev, wav):
     umbral = 32768 * 10 ** (SIL_DB / 20)
     sil = [max(x[i * win:(i + 1) * win]) < umbral and -min(x[i * win:(i + 1) * win]) < umbral for i in range(n)]
     total = len(x) / sr
+    ws = texto.split()
     cortes, i = [], 0
     while i < n:
         if not sil[i]:
@@ -101,8 +118,10 @@ def compacta(mp3, ev, wav):
                 cortes.append((0.0, tb - INICIO))
         elif j == n:
             cortes.append((ta + 0.02, total))
-        elif tb - ta > PAUSA_MAX:
-            cortes.append((ta + PAUSA_MAX / 2, tb - PAUSA_MAX / 2))
+        else:
+            tope = tope_pausa(ta, ev, ws)
+            if tb - ta > tope:
+                cortes.append((ta + tope / 2, tb - tope / 2))
         i = j
     if not cortes:
         return total, ev
@@ -161,11 +180,11 @@ def voz(job, work):
     for i, sc in enumerate(escenas):
         mp3 = os.path.join(work, 'v%02d.mp3' % i)
         ev = tts_seguro(sc['texto'], voz_n, tono(sc, 'rate', rate, r'^[+-]\d{1,2}%$'), tono(sc, 'pitch', pitch, r'^[+-]\d{1,2}Hz$'), mp3)
-        pausa = min(float(tono(sc, 'pausa', '0', r'^\d(\.\d+)?$')), 0.4)
+        pausa = min(float(tono(sc, 'pausa', '0', r'^\d(\.\d+)?$')), 0.8)
         if not os.path.exists(mp3) or os.path.getsize(mp3) < 500:
             raise RuntimeError('sin audio en escena %d' % i)
         tr = os.path.join(work, 't%02d.wav' % i)
-        d, ev = compacta(mp3, ev, tr)
+        d, ev = compacta(mp3, ev, tr, sc['texto'])
         dur = max(MIN_DUR, d + GAP + pausa) + (TAIL if i == len(escenas) - 1 else 0)
         wav = os.path.join(work, 'v%02d.wav' % i)
         sh([FF, '-y', '-v', 'error', '-i', tr, '-ar', '44100', '-ac', '1', '-af', 'apad=whole_dur=%.3f' % dur, wav])
