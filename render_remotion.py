@@ -135,6 +135,18 @@ def nivela_sfx():
         os.replace(t, a)
 
 
+def kit_interpolate(tsx):
+    # 8-nov: el interpolate de Remotion rompe si el rango sale desordenado; la escena usa el del kit, que lo ordena.
+    def cambiar(m):
+        nombres = [n.strip() for n in m.group(1).split(',') if n.strip()]
+        if 'interpolate' not in nombres:
+            return m.group(0)
+        resto = [n for n in nombres if n != 'interpolate']
+        antes = ('import {%s} from %sremotion%s;\n' % (', '.join(resto), m.group(2), m.group(2))) if resto else ''
+        return antes + "import {interpolate} from './kit';"
+    return re.sub(r"import\s*\{([^}]*)\}\s*from\s*(['\"])remotion\2;?", cambiar, tsx)
+
+
 def main():
     job_path, out = sys.argv[1], os.path.abspath(sys.argv[2])
     job = json.load(open(job_path, encoding='utf-8'))
@@ -147,7 +159,7 @@ def main():
     nivela_sfx()
     data = voz(job, work)
     json.dump(data, open(os.path.join(RM, 'public', 'palabras.json'), 'w', encoding='utf-8'), ensure_ascii=False)
-    open(os.path.join(RM, 'src', 'Escena.tsx'), 'w', encoding='utf-8').write(tsx)
+    open(os.path.join(RM, 'src', 'Escena.tsx'), 'w', encoding='utf-8').write(kit_interpolate(tsx))
     npx = 'npx.cmd' if os.name == 'nt' else 'npx'
     if not os.path.isdir(os.path.join(RM, 'node_modules')):
         sh(['npm.cmd' if os.name == 'nt' else 'npm', 'ci', '--no-audit', '--no-fund'], cwd=RM)
