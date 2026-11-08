@@ -2,14 +2,20 @@
 // La escena de cada video (src/Escena.tsx) la escribe Claude y usa estas piezas.
 // Todo se ata a la voz: T(i) y en('palabra') dan el segundo exacto en que se dice.
 import React from 'react';
-import {AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Easing} from 'remotion';
+import {AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate as interpolarRemotion, spring, Easing} from 'remotion';
 import data from '../public/palabras.json';
 
 export type Palabra = {w: string; t: number; d: number; f?: boolean; k?: boolean};
 export const DUR: number = (data as {dur: number}).dur;
 export const words: Palabra[] = (data as {words: Palabra[]}).words;
 export const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
-export {Easing, interpolate, spring, AbsoluteFill};
+// 8-nov: con la voz real el rango puede salir desordenado y Remotion rompe; aqui se ordena solo.
+export const interpolate: typeof interpolarRemotion = (x, ent, sal, op) => {
+  const e = ent.map((v) => (Number.isFinite(v) ? v : 0));
+  for (let i = 1; i < e.length; i++) if (e[i] <= e[i - 1]) e[i] = e[i - 1] + 0.001;
+  return interpolarRemotion(Number.isFinite(x) ? x : 0, e, sal, op);
+};
+export {Easing, spring, AbsoluteFill};
 export {Entrar} from './Entrar';
 
 export const FONT = 'Poppins, "Segoe UI", Arial, sans-serif';
