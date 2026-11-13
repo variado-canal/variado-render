@@ -221,6 +221,53 @@ def _silencios(wav):
     return list(zip(ini, fin))
 
 
+def _tiempos_reales(wav, ws):
+    # FASE 6: tiempo de cada palabra del guion sacado del audio real (faster-whisper), no estimado.
+    # Las palabras que whisper oye distinto toman el hueco entre sus vecinas. None si no se puede.
+    try:
+        try:
+            from faster_whisper import WhisperModel
+        except ImportError:
+            subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--break-system-packages', 'faster-whisper'],
+                           check=True)
+            from faster_whisper import WhisperModel
+        import difflib, numpy
+        # El audio va como muestras de 16 kHz para no depender del lector de audio de whisper.
+        pcm = subprocess.run([FF, '-v', 'error', '-i', wav, '-ar', '16000', '-ac', '1', '-f', 's16le', '-'],
+                             capture_output=True, check=True).stdout
+        audio = numpy.frombuffer(pcm, numpy.int16).astype(numpy.float32) / 32768
+        segs, _ = WhisperModel('base', device='cpu', compute_type='int8').transcribe(
+            audio, language='es', word_timestamps=True, initial_prompt=' '.join(ws))
+        oidas = [(w.word, w.start, w.end) for s in segs for w in (s.words or [])]
+    except Exception as e:
+        print('alineación real falló, sigo estimando:', str(e)[:120])
+        return None
+    if len(oidas) < len(ws) // 2:
+        return None
+    a, b = [_norm(w) for w in ws], [_norm(o[0]) for o in oidas]
+    t = [None] * len(ws)
+    for blq in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks():
+        for k in range(blq.size):
+            t[blq.a + k] = (oidas[blq.b + k][1], oidas[blq.b + k][2])
+    if sum(1 for x in t if x) < len(ws) * 0.6:
+        return None
+    i = 0
+    while i < len(ws):
+        if t[i]:
+            i += 1
+            continue
+        j = i
+        while j < len(ws) and not t[j]:
+            j += 1
+        ini = t[i - 1][1] if i > 0 else (t[j][0] - 0.3 * (j - i) if j < len(ws) else 0.0)
+        fin = t[j][0] if j < len(ws) else ini + 0.3 * (j - i)
+        paso = max(fin - ini, 0.05 * (j - i)) / (j - i)
+        for k in range(i, j):
+            t[k] = (max(0.0, ini + paso * (k - i)), max(0.0, ini + paso * (k - i + 1)))
+        i = j
+    return t
+
+
 def voz_gemini(job, work):
     escenas = job['escenas']
     crudo = os.path.join(work, 'g_crudo.wav')
@@ -232,6 +279,8 @@ def voz_gemini(job, work):
         'silenceremove=start_periods=1:start_threshold=-42dB,areverse,silenceremove=start_periods=1:start_threshold=-42dB,areverse', limpio])
     total = dur_audio(limpio, work)
     sil = _silencios(limpio)
+    por_esc = [sc['texto'].split() for sc in escenas]
+    reales = _tiempos_reales(limpio, [w for ws in por_esc for w in ws])
     # Corte entre escenas: el silencio más cercano a donde tocaría por largo de texto.
     largos = [len(sc['texto']) for sc in escenas]
     cortes, acum, prev = [0.0], 0, 0.0
@@ -243,6 +292,12 @@ def voz_gemini(job, work):
         corte = (c[0] + c[1]) / 2 if c and abs((c[0] + c[1]) / 2 - est) < 2.5 else est
         cortes.append(corte)
         prev = corte
+    if reales:
+        # Corte entre escenas: a mitad del hueco entre la última palabra de una y la primera de la siguiente.
+        cortes, n = [0.0], 0
+        for ws in por_esc[:-1]:
+            n += len(ws)
+            cortes.append(max(cortes[-1] + 0.3, (reales[n - 1][1] + reales[n][0]) / 2))
     cortes.append(total)
     lista, palabras, t0 = [], [], 0.0
     for i, sc in enumerate(escenas):
@@ -254,8 +309,15 @@ def voz_gemini(job, work):
             '-af', 'apad=whole_dur=%.3f' % dur, wav])
         lista.append(wav)
         primera = True
-        for (w, aa, dd) in alinea(sc['texto'], [], d):
-            palabras.append({'w': w, 't': round(t0 + aa, 3), 'd': round(dd, 3), 'f': primera})
+        n = sum(len(x) for x in por_esc[:i])
+        clave = _norm(sc['p'].get('key', '')) if isinstance(sc.get('p'), dict) else ''
+        marcada = False
+        tw = ([(w, max(0.0, reales[n + k][0] - a), max(0.05, reales[n + k][1] - reales[n + k][0]))
+               for k, w in enumerate(por_esc[i])] if reales else alinea(sc['texto'], [], d))
+        for (w, aa, dd) in tw:
+            k = bool(clave) and not marcada and _norm(w) == clave
+            marcada = marcada or k
+            palabras.append({'w': w, 't': round(t0 + aa, 3), 'd': round(dd, 3), 'f': primera, 'k': k})
             primera = bool(re.search(r'[.!?…]$', w))
         t0 += dur
     lst = os.path.join(work, 'lista.txt')
