@@ -171,7 +171,109 @@ def alinea(texto, ev, d):
     return out
 
 
+# Voz Gemini (13-nov): el guion entero en UNA toma con Achird para que las pausas salgan por intención.
+# Clave en el secreto GEMINI_API_KEY del repo. Nivel gratis: 10 audios/día por modelo, por eso se prueban
+# varios; si todos fallan (429, sin clave), sigue la voz edge de siempre.
+G_MODELOS = ['gemini-3.8-flash-tts', 'gemini-3.1-flash-tts-preview', 'gemini-3.8-flash-lite-tts']
+G_ESTILO = ('Narrador latinoamericano de un video corto, hablándole a un amigo. '
+            'La primera frase ABRE el video: nadie le preguntó nada, así que no suena a respuesta ni a continuación; '
+            'arranca arriba, con la seguridad de quien suelta un dato que sorprende. '
+            'Dicción limpia de español neutro: pronuncia cada palabra completa, con todas sus eses '
+            '(tres veces, nunca tre vece) y sin comerse sílabas finales. '
+            'Natural y conversacional, nada de locutor. Ritmo vivo pero sin prisa. Pausas según la intención: '
+            'muy cortas en la explicación, algo más largas antes de una revelación. Sin pausas en las comas del gancho.')
+
+
+def _gemini(texto, voz_g, estilo, wav):
+    import base64, urllib.request
+    clave = os.environ.get('GEMINI_API_KEY', '')
+    if not clave:
+        return False
+    for m in G_MODELOS:
+        body = {'model': m, 'input': [{'type': 'user_input', 'content': [{'type': 'text', 'text': texto,
+                'annotations': [{'type': 'speech_metadata', 'style': estilo}]}]}],
+                'response_format': {'type': 'audio'}, 'generation_config': {'speech_config': [{'voice': voz_g}]}}
+        req = urllib.request.Request('https://generativelanguage.googleapis.com/v1beta/interactions',
+                                     data=json.dumps(body).encode('utf-8'), method='POST',
+                                     headers={'x-goog-api-key': clave, 'Content-Type': 'application/json'})
+        try:
+            r = json.load(urllib.request.urlopen(req, timeout=180))
+            data = next(c['data'] for s in r.get('steps', []) for c in (s.get('content') or []) if c.get('data'))
+            raw = base64.b64decode(data)
+            if raw[:4] != b'RIFF':
+                with wave.open(wav, 'wb') as w:
+                    w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000); w.writeframes(raw)
+            else:
+                open(wav, 'wb').write(raw)
+            print('voz gemini con', m)
+            return True
+        except Exception as e:
+            print('voz gemini', m, 'falló:', str(e)[:120])
+    return False
+
+
+def _silencios(wav):
+    # Silencios internos (inicio, fin) para cortar escenas donde la voz respira.
+    p = subprocess.run([FF, '-v', 'info', '-i', wav, '-af', 'silencedetect=n=-38dB:d=0.12', '-f', 'null', '-'],
+                       capture_output=True, text=True)
+    ini = [float(x) for x in re.findall(r'silence_start: ([\d.]+)', p.stderr)]
+    fin = [float(x) for x in re.findall(r'silence_end: ([\d.]+)', p.stderr)]
+    return list(zip(ini, fin))
+
+
+def voz_gemini(job, work):
+    escenas = job['escenas']
+    crudo = os.path.join(work, 'g_crudo.wav')
+    if not _gemini(' '.join(sc['texto'].strip() for sc in escenas), job.get('voz_gemini', 'Achird'),
+                   job.get('estilo_voz', G_ESTILO), crudo):
+        return None
+    limpio = os.path.join(work, 'g.wav')
+    sh([FF, '-y', '-v', 'error', '-i', crudo, '-ar', '44100', '-ac', '1', '-af',
+        'silenceremove=start_periods=1:start_threshold=-42dB,areverse,silenceremove=start_periods=1:start_threshold=-42dB,areverse', limpio])
+    total = dur_audio(limpio, work)
+    sil = _silencios(limpio)
+    # Corte entre escenas: el silencio más cercano a donde tocaría por largo de texto.
+    largos = [len(sc['texto']) for sc in escenas]
+    cortes, acum, prev = [0.0], 0, 0.0
+    for L in largos[:-1]:
+        acum += L
+        est = total * acum / sum(largos)
+        cand = [s for s in sil if (s[0] + s[1]) / 2 > prev + 0.3]
+        c = min(cand, key=lambda s: abs((s[0] + s[1]) / 2 - est)) if cand else None
+        corte = (c[0] + c[1]) / 2 if c and abs((c[0] + c[1]) / 2 - est) < 2.5 else est
+        cortes.append(corte)
+        prev = corte
+    cortes.append(total)
+    lista, palabras, t0 = [], [], 0.0
+    for i, sc in enumerate(escenas):
+        a, b = cortes[i], cortes[i + 1]
+        d = b - a
+        dur = max(MIN_DUR, d) + (TAIL if i == len(escenas) - 1 else 0)
+        wav = os.path.join(work, 'v%02d.wav' % i)
+        sh([FF, '-y', '-v', 'error', '-ss', '%.3f' % a, '-t', '%.3f' % d, '-i', limpio, '-ar', '44100', '-ac', '1',
+            '-af', 'apad=whole_dur=%.3f' % dur, wav])
+        lista.append(wav)
+        primera = True
+        for (w, aa, dd) in alinea(sc['texto'], [], d):
+            palabras.append({'w': w, 't': round(t0 + aa, 3), 'd': round(dd, 3), 'f': primera})
+            primera = bool(re.search(r'[.!?…]$', w))
+        t0 += dur
+    lst = os.path.join(work, 'lista.txt')
+    with open(lst, 'w') as f:
+        for w in lista:
+            f.write("file '%s'\n" % w.replace('\\', '/'))
+    sh([FF, '-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', os.path.join(RM, 'public', 'voz.wav')])
+    return {'dur': round(t0, 3), 'words': palabras}
+
+
 def voz(job, work):
+    if job.get('voz_motor', 'gemini') == 'gemini':
+        try:
+            data = voz_gemini(job, work)
+            if data:
+                return data
+        except Exception as e:
+            print('voz gemini falló, sigo con edge:', str(e)[:160])
     voz_n = job.get('voz_edge', 'es-MX-JorgeNeural')
     rate = job.get('rate', '+8%')
     pitch = job.get('pitch', '+2Hz')
