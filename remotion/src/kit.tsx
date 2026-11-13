@@ -16,7 +16,7 @@ export const interpolate: typeof interpolarRemotion = (x, ent, sal, op) => {
   return interpolarRemotion(Number.isFinite(x) ? x : 0, e, sal, op);
 };
 export {Easing, spring, AbsoluteFill};
-export {Entrar} from './Entrar';
+export * from './Cine'; export {Entrar} from './Entrar';
 
 export const FONT = 'Poppins, "Segoe UI", Arial, sans-serif';
 export const MANO = '"Patrick Hand", "Segoe Print", cursive';
